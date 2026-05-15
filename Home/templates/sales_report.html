@@ -1,0 +1,133 @@
+{% extends 'base_admin.html' %}
+{% load humanize %}
+
+{% block content %}
+<style>
+    :root {
+        --primary: #3b82f6;
+        --glass: rgba(255, 255, 255, 0.95);
+    }
+
+    .glass-card {
+        background: var(--glass);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(0,0,0,0.05);
+        border-radius: 16px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+    }
+
+    /* Unified Status Badges */
+    .status-badge {
+        padding: 0.5em 1em;
+        font-size: 0.75rem;
+        font-weight: 700;
+        border-radius: 50px;
+        text-transform: uppercase;
+        display: inline-block;
+    }
+    .badge-paid { background-color: #dcfce7; color: #15803d; border: 1px solid #bbf7d0; }
+    .badge-credit { background-color: #fef9c3; color: #854d0e; border: 1px solid #fef08a; }
+    .badge-pending { background-color: #fee2e2; color: #b91c1c; border: 1px solid #fecaca; }
+
+    .table thead th {
+        background-color: #f8fafc;
+        text-transform: uppercase;
+        font-size: 0.75rem;
+        letter-spacing: 0.025em;
+        color: #64748b;
+        border-top: none;
+        padding: 1rem;
+    }
+
+    .table tbody td {
+        padding: 1rem;
+        color: #334155;
+    }
+
+    .hover-row:hover {
+        background-color: #f1f5f9 !important;
+    }
+</style>
+
+<div class="container-fluid py-4">
+    <div class="mb-4 d-flex justify-content-between align-items-end">
+        <div>
+            <a href="{% url 'Admin' %}" class="text-decoration-none text-primary small fw-bold">
+                <i class="fas fa-arrow-left me-1"></i> Dashboard
+            </a>
+            <h2 class="fw-bold mt-2 mb-0">Full Sales Ledger</h2>
+            <p class="text-muted small mb-0">Detailed history of all product transactions</p>
+        </div>
+        <div class="text-end">
+            <span class="badge bg-primary px-3 py-2 rounded-pill">
+                <i class="fas fa-file-invoice-dollar me-2"></i>{{ all_sales.count }} Records
+            </span>
+        </div>
+    </div>
+
+    <div class="glass-card shadow-sm border-0">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead>
+                    <tr>
+                        <th class="ps-4">Date & Time</th>
+                        <th>Product Details</th>
+                        <th>Quantity</th>
+                        <th>Unit Price</th>
+                        <th>Total Revenue</th>
+                        <th class="text-center pe-4">Payment Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for sale in all_sales %}
+                    <tr class="hover-row">
+                        <td class="ps-4">
+                            <span class="d-block fw-semibold">{{ sale.sold_at|date:"d M Y" }}</span>
+                            <small class="text-muted">{{ sale.sold_at|date:"H:i A" }}</small>
+                        </td>
+                        <td>
+                            <div class="d-flex align-items-center">
+                                <div class="avatar-sm me-3 bg-light rounded-circle d-flex align-items-center justify-content-center" style="width: 32px; height: 32px;">
+                                    <i class="fas fa-shopping-bag text-muted small"></i>
+                                </div>
+                                <div>
+                                    <span class="fw-bold d-block">{{ sale.get_product_display }}</span>
+                                    <small class="text-muted">{{ sale.payment_method }}</small>
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            <span class="badge bg-light text-dark border">{{ sale.quantity|floatformat:2 }} Units</span>
+                        </td>
+                        <td class="text-muted">
+                            KES {{ sale.unit_price|intcomma }}
+                        </td>
+                        <td>
+                            <span class="fw-bold text-primary">KES {{ sale.total_revenue|intcomma }}</span>
+                        </td>
+                        <td class="text-center pe-4">
+                            {% if sale.payment_status == 'PAID' or sale.payment_status == 'COMPLETED' or sale.payment_status == 'SUCCESS' %}
+                                <span class="status-badge badge-paid">Paid</span>
+                            {% elif sale.payment_status == 'CREDIT' %}
+                                <span class="status-badge badge-credit">Credit</span>
+                            {% else %}
+                                <span class="status-badge badge-pending">{{ sale.payment_status|default:"Pending" }}</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="6" class="text-center py-5">
+                            <div class="text-muted">
+                                <i class="fas fa-folder-open fa-3x mb-3 d-block opacity-25"></i>
+                                No sales records found in the database.
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

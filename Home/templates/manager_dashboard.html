@@ -1,0 +1,170 @@
+{% extends 'base.html' %}
+{% load humanize %}
+
+{% block content %}
+<div class="container-fluid py-4" id="dashboard-app">
+    <div class="row mb-4 align-items-center">
+        <div class="col">
+            <h2 class="fw-800 m-0 text-dark">Mill Operations <span class="fs-6 text-muted fw-normal">| Live Hub</span></h2>
+        </div>
+        <div class="col-auto">
+            <button class="btn btn-primary fw-bold px-4 shadow-sm" data-bs-toggle="modal" data-bs-target="#quickSaleModal">
+                <i class="fas fa-plus me-2"></i>New Sale
+            </button>
+        </div>
+    </div>
+
+    <div class="row g-3 mb-4">
+        {% include "inventory_cards.html" %}
+    </div>
+
+    <div class="row g-4">
+        <div class="col-lg-8">
+            <div class="glass-card shadow-sm h-100">
+                <div class="p-3 border-bottom d-flex justify-content-between align-items-center">
+                    <h6 class="m-0 fw-bold">Recent Production</h6>
+                    <div class="position-relative w-25">
+                        <i class="fas fa-search position-absolute top-50 start-0 translate-middle-y ms-2 text-muted small"></i>
+                        <input type="text" id="batchSearch" class="form-control form-control-sm ps-4" placeholder="Search Batch ID...">
+                    </div>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0" id="batchTable">
+                        <thead>
+                            <tr class="text-muted small">
+                                <th>BATCH ID</th>
+                                <th>MAIZE IN</th>
+                                <th>UNGA OUT</th>
+                                <th>STATUS</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for batch in recent_batches %}
+                            <tr class="batch-row">
+                                <td class="fw-bold batch-id-cell">{{ batch.batch_no }}</td>
+                                <td>{{ batch.sacks_pulled_from_store }} Sacks</td>
+                                <td class="text-success fw-bold">{{ batch.flour_bales }} Bales</td>
+                                <td><span class="badge bg-soft-success text-success border border-success-subtle">Completed</span></td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="4" class="text-center py-4 text-muted">No recent batches found.</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <div class="glass-card shadow-sm h-100">
+                <div class="p-3 border-bottom d-flex justify-content-between">
+                    <h6 class="m-0 fw-bold">Sales Feed</h6>
+                    <small class="text-success fw-bold"><i class="fas fa-circle animate-pulse me-1"></i>Active Now</small>
+                </div>
+                <div class="sales-feed p-0" id="salesFeed" style="max-height: 400px; overflow-y: auto;">
+                    {% for sale in recent_sales %}
+                    <div class="sale-item p-3 border-bottom d-flex justify-content-between align-items-center">
+                        <div>
+                            <span class="d-block fw-bold text-dark">{{ sale.get_product_display }}</span>
+                            <small class="text-muted">{{ sale.sold_at|timesince }} ago</small>
+                        </div>
+                        <div class="text-end">
+                            <span class="d-block text-danger small">-{{ sale.quantity|floatformat:0 }}</span>
+                            <span class="fw-bold">KES {{ sale.total_revenue|intcomma }}</span>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="quickSaleModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow">
+            <form method="POST" action="{% url 'record_sale' %}">
+                {% csrf_token %}
+                <div class="modal-header border-0 bg-light">
+                    <h5 class="modal-title fw-bold">Quick Record Sale</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    {{ sale_form.as_p }}
+                </div>
+                <div class="modal-footer border-0">
+                    <button type="submit" class="btn btn-success w-100 fw-bold py-2">Confirm Sale</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    
+    // 1. IMPROVED Search for Batch Number specifically
+    const searchInput = document.getElementById('batchSearch');
+    const rows = document.querySelectorAll('.batch-row');
+
+    searchInput.addEventListener('input', function(e) {
+        const term = e.target.value.toLowerCase().trim();
+        
+        rows.forEach(row => {
+            // Find the cell with the class 'batch-id-cell'
+            const batchId = row.querySelector('.batch-id-cell').textContent.toLowerCase();
+            
+            if (batchId.includes(term)) {
+                row.style.display = '';
+            } else {
+                row.style.display = 'none';
+            }
+        });
+    });
+
+    // 2. Low Stock Alerts
+    const ungaStock = parseFloat("{{ live_unga|default:0 }}");
+    if (ungaStock < 20) {
+        // You could replace this with a Bootstrap Toast
+        console.warn("Inventory Alert: Unga Bales are low!");
+    }
+
+    // 3. Highlight Animation for newest item
+    const firstSale = document.querySelector('.sale-item');
+    if (firstSale) {
+        firstSale.classList.add('new-entry-flash');
+    }
+});
+</script>
+
+<style>
+    .glass-card { background: white; border-radius: 12px; border: 1px solid rgba(0,0,0,0.08); overflow: hidden; }
+    .bg-soft-success { background-color: #e8f8f0; color: #10b981; }
+    .fw-800 { font-weight: 800; }
+    
+    /* Animation for the "Active" dot */
+    .animate-pulse {
+        animation: pulse 2s infinite;
+        font-size: 8px;
+        vertical-align: middle;
+    }
+
+    @keyframes pulse {
+        0% { opacity: 1; }
+        50% { opacity: 0.3; }
+        100% { opacity: 1; }
+    }
+    
+    /* Flash green for new sales */
+    .new-entry-flash { animation: flash-green 2s ease-out; }
+    @keyframes flash-green {
+        0% { background-color: #f0fff4; }
+        100% { background-color: transparent; }
+    }
+
+    .sale-item:hover { background-color: #f8f9fa; }
+    .table thead th { letter-spacing: 0.05em; font-weight: 700; }
+</style>
+{% endblock %}

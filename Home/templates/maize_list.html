@@ -1,0 +1,92 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="fw-bold mb-0">Maize Intake History</h2>
+            <p class="text-muted">A complete log of all raw maize deliveries</p>
+        </div>
+        <a href="{% url 'record_maize_intake' %}" class="btn btn-primary rounded-pill px-4">
+            <i class="fas fa-plus me-2"></i>New Record
+        </a>
+    </div>
+
+    <div class="glass-card shadow-sm overflow-hidden">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="bg-light">
+                    <tr>
+                        <th class="ps-4">Date</th>
+                        <th>Farmer / Supplier</th>
+                        <th>Sacks</th>
+                        <th>Price/Sack</th>
+                        <th>Total Payout</th>
+                        <th class="text-end pe-4">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for intake in intakes %}
+                    <tr>
+                        <td class="ps-4">
+                            <span class="d-block fw-bold">{{ intake.date_delivered|date:"d M, Y" }}</span>
+                            <small class="text-muted">{{ intake.date_delivered|time:"H:i" }}</small>
+                        </td>
+                        <td>
+                            <div class="d-flex align-items-center">
+                                <div class="avatar-sm me-3 bg-soft-primary text-primary rounded-circle d-flex align-items-center justify-content-center">
+                                    {{ intake.farmer.name|slice:":1" }}
+                                </div>
+                                <span class="fw-semibold">{{ intake.farmer.name }}</span>
+                            </div>
+                        </td>
+                        <td>
+                            <span class="badge bg-soft-info text-info rounded-pill px-3">
+                                {{ intake.sacks_delivered }} Sacks
+                            </span>
+                        </td>
+                        <td>KES {{ intake.price_per_sack|floatformat:2 }}</td>
+                        <td class="fw-bold text-dark">KES {{ intake.total_credit|floatformat:2 }}</td>
+                        <td class="text-end pe-4">
+                            <button class="btn btn-sm btn-outline-secondary rounded-circle">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="6" class="text-center py-5 text-muted">
+                            <i class="fas fa-inbox fa-3x mb-3 d-block"></i>
+                            No intake records found.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<style>
+    .glass-card {
+        background: rgba(255, 255, 255, 0.9);
+        backdrop-filter: blur(10px);
+        border-radius: 20px;
+        border: 1px solid rgba(0, 0, 0, 0.05);
+    }
+    .table thead th {
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        color: #64748b;
+        border-top: none;
+        padding: 15px 10px;
+    }
+    .bg-soft-primary { background-color: #e0e7ff; }
+    .bg-soft-info { background-color: #e0f2fe; }
+    .avatar-sm { width: 32px; height: 32px; font-weight: bold; }
+    .table-hover tbody tr:hover {
+        background-color: rgba(248, 250, 252, 0.8);
+    }
+</style>
+{% endblock %}

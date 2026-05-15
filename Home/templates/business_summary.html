@@ -1,0 +1,64 @@
+{% extends 'base_admin.html' %}
+
+{% block content %}
+<div class="container-fluid">
+    <h2 class="mb-4 fw-bold">Performance Report</h2>
+
+    <div class="card glass-card mb-4">
+        <div class="card-header bg-primary text-white rounded-top">
+            <h5 class="mb-0"><i class="fas fa-wine-bottle me-2"></i> Milk Margin Analysis</h5>
+        </div>
+        <div class="card-body">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Avg Buying Price</th>
+                        <th>Avg Selling Price</th>
+                        <th>Margin (Profit/Ltr)</th>
+                        <th>Total Volume Sold</th>
+                        <th class="text-end">Estimated Profit</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>KES {{ milk_report.avg_buy|floatformat:2 }}</td>
+                        <td>KES {{ milk_report.avg_sell|floatformat:2 }}</td>
+                        <td class="text-success fw-bold">+ KES {{ milk_report.margin|floatformat:2 }}</td>
+                        <td>{{ milk_report.total_qty }} Ltrs</td>
+                        <td class="text-end fw-bold text-primary">KES {{ milk_report.total_profit|floatformat:2 }}</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="card glass-card">
+        <div class="card-header bg-dark text-white rounded-top">
+            <h5 class="mb-0"><i class="fas fa-store me-2"></i> Shop & Milling Sales (Products)</h5>
+        </div>
+        <div class="card-body">
+            <p class="text-muted small">Reference: Average cost of raw maize per sack: <strong>KES {{ avg_maize_cost|floatformat:2 }}</strong></p>
+            <table class="table table-hover">
+                <thead class="table-light">
+                    <tr>
+                        <th>Product</th>
+                        <th>Total Qty Sold</th>
+                        <th>Avg Price</th>
+                        <th class="text-end">Total Revenue</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in shop_reports %}
+                    <tr>
+                        <td><strong>{{ item.name }}</strong></td>
+                        <td>{{ item.quantity_sold }}</td>
+                        <td>KES {{ item.avg_selling_price|floatformat:2 }}</td>
+                        <td class="text-end fw-bold">KES {{ item.revenue|floatformat:2 }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

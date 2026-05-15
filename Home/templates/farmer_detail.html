@@ -1,0 +1,116 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container-fluid py-3">
+    <!-- Farmer Profile Header -->
+    <div class="glass-card-sm border-0 shadow-sm mb-4 p-4" style="background: linear-gradient(135deg, #1e293b 0%, #334155 100%); color: white;">
+        <div class="d-flex justify-content-between align-items-start">
+            <div>
+                <span class="badge bg-info mb-2">{{ farmer.farmer_id }}</span>
+                <h2 class="fw-900 mb-1">{{ farmer.name }}</h2>
+                <p class="opacity-75 mb-0"><i class="fas fa-map-marker-alt me-2"></i>{{ farmer.location|default:"No Location Set" }}</p>
+                <p class="opacity-75"><i class="fas fa-phone me-2"></i>{{ farmer.phone_number }}</p>
+            </div>
+            <div class="text-end">
+                <small class="d-block opacity-75">CURRENT BALANCE</small>
+                <h1 class="fw-900 text-warning">KES {{ total_balance|stringformat:"d" }}</h1>
+            </div>
+        </div>
+    </div>
+
+    <!-- Navigation Tabs for Mobile -->
+    <ul class="nav nav-pills nav-fill mb-4 bg-white p-1 rounded-pill shadow-sm" id="farmerTab" role="tablist">
+        <li class="nav-item">
+            <button class="nav-link active rounded-pill" data-bs-toggle="tab" data-bs-target="#maize">Maize</button>
+        </li>
+        <li class="nav-item">
+            <button class="nav-link rounded-pill" data-bs-toggle="tab" data-bs-target="#milk">Milk</button>
+        </li>
+        <li class="nav-item">
+            <button class="nav-link rounded-pill" data-bs-toggle="tab" data-bs-target="#payments">Payouts</button>
+        </li>
+    </ul>
+
+    <div class="tab-content" id="farmerTabContent">
+        <!-- Maize Intake History -->
+        <div class="tab-pane fade show active" id="maize">
+            <div class="glass-card-sm border-0 shadow-sm">
+                <h6 class="fw-bold mb-3">Maize Deliveries</h6>
+                {% for record in maize_history %}
+                <div class="d-flex justify-content-between align-items-center border-bottom py-3">
+                    <div>
+                        <span class="fw-bold d-block">{{ record.sacks_delivered }} Sacks</span>
+                        <small class="text-muted">{{ record.date|date:"d M, Y" }}</small>
+                    </div>
+                    <div class="text-end">
+                        <span class="d-block fw-bold text-success">+ KES {{ record.total_credit }}</span>
+                        <!-- Edit Button -->
+                        <button class="btn btn-sm btn-light mt-1 trigger-edit" 
+                                data-type="Maize Intake" 
+                                data-id="{{ record.id }}" 
+                                data-qty="{{ record.sacks_delivered }}"
+                                data-price="{{ record.price_per_sack }}"
+                                data-url="{% url 'edit_maize' record.id %}">
+                            <i class="fas fa-edit text-primary"></i>
+                        </button>
+                    </div>
+                </div>
+                {% empty %}
+                <p class="text-center text-muted py-4">No maize records found.</p>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Milk Collection History -->
+        <div class="tab-pane fade" id="milk">
+            <div class="glass-card-sm border-0 shadow-sm">
+                <h6 class="fw-bold mb-3">Milk Collections</h6>
+                {% for record in milk_history %}
+                <div class="d-flex justify-content-between align-items-center border-bottom py-3">
+                    <div>
+                        <span class="fw-bold d-block">{{ record.litres }} Litres</span>
+                        <small class="text-muted">{{ record.date|date:"d M, Y" }}</small>
+                    </div>
+                    <div class="text-end">
+                        <span class="d-block fw-bold text-danger">+ KES {{ record.total_cost }}</span>
+                        <!-- Edit Button -->
+                        <button class="btn btn-sm btn-light mt-1 trigger-edit" 
+                                data-type="Milk Collection" 
+                                data-id="{{ record.id }}" 
+                                data-qty="{{ record.litres }}"
+                                data-price="{{ record.buying_price }}"
+                                data-url="{% url 'edit_milk' record.id %}">
+                            <i class="fas fa-edit text-primary"></i>
+                        </button>
+                    </div>
+                </div>
+                {% empty %}
+                <p class="text-center text-muted py-4">No milk records found.</p>
+                {% endfor %}
+            </div>
+        </div>
+        
+        <!-- Payout History -->
+        <div class="tab-pane fade" id="payments">
+            <div class="glass-card-sm border-0 shadow-sm border-start border-success border-4">
+                <h6 class="fw-bold mb-3">Payment History</h6>
+                {% for pay in payments %}
+                <div class="d-flex justify-content-between align-items-center border-bottom py-3">
+                    <div>
+                        <span class="fw-bold d-block">KES {{ pay.amount }}</span>
+                        <small class="text-muted">Ref: {{ pay.reference }}</small>
+                    </div>
+                    <div class="text-end">
+                        <small class="text-muted d-block">{{ pay.date|date:"d M, Y" }}</small>
+                        <span class="badge bg-success-light text-success">Paid Out</span>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Reusing the Edit Modal from the previous step here -->
+
+{% endblock %}

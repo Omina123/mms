@@ -1,0 +1,60 @@
+{% extends 'baseAdmin.html' %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="card shadow mb-4">
+        <div class="card-header py-3 bg-primary text-white">
+            <h5 class="m-0">Generate Performance Report</h5>
+        </div>
+        <div class="card-body">
+            <form method="GET" class="row g-3 align-items-end">
+                <div class="col-md-4">
+                    <label class="form-label">Start Date</label>
+                    <input type="date" name="start_date" class="form-control" value="{{ start_date|date:'Y-m-d' }}">
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">End Date</label>
+                    <input type="date" name="end_date" class="form-control" value="{{ end_date|date:'Y-m-d' }}">
+                </div>
+                <div class="col-md-4">
+                    <button type="submit" class="btn btn-primary w-100">Filter Report</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-6">
+            <div class="card border-left-info shadow h-100 py-2">
+                <div class="card-body">
+                    <h6 class="text-info font-weight-bold text-uppercase mb-1">Milk Section ({{ start_date|date:"d M" }} - {{ end_date|date:"d M" }})</h6>
+                    <hr>
+                    <p>Total Litres Collected: <strong>{{ milk_litres }} L</strong></p>
+                    <p>Total Buying Cost: <strong>Ksh {{ milk_cost }}</strong></p>
+                    <p>Total Sales Revenue: <strong class="text-success">Ksh {{ milk_revenue }}</strong></p>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            <div class="card border-left-success shadow h-100 py-2">
+                <div class="card-body">
+                    <h6 class="text-success font-weight-bold text-uppercase mb-1">Milling Section</h6>
+                    <hr>
+                    <p>Maize Sacks Received: <strong>{{ sacks_received }}</strong></p>
+                    <p>Sacks Milled to Flour: <strong>{{ sacks_milled }}</strong></p>
+                    <p>Total Flour/Germ Sales: <strong class="text-success">Ksh {{ milling_revenue }}</strong></p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card bg-dark text-white text-center p-4">
+                <h1>TOTAL BUSINESS REVENUE: Ksh {{ total_revenue }}</h1>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

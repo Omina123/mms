@@ -1,0 +1,176 @@
+{% extends 'base.html' %}
+
+{% block title %}Farmer Onboarding{% endblock %}
+
+{% block content %}
+<div class="registration-wrapper">
+    <div class="form-container">
+        
+        <div class="form-header">
+            <div class="brand-icon">
+                <i class="fas fa-seedling"></i>
+            </div>
+            <div class="header-text">
+                <h2>Farmer Onboarding</h2>
+                <p>Register a new farmer to the system</p>
+            </div>
+            <div class="progress-container">
+                <div id="progressBar" class="progress-bar"></div>
+            </div>
+        </div>
+
+        <form method="POST" id="farmerForm" class="form-body" novalidate>
+            {% csrf_token %}
+            
+            <div class="fields-grid">
+                {% for field in form %}
+                <div class="input-group-custom">
+                    <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                    <div class="input-relative">
+                        {{ field }}
+                        {% if field.name == 'phone_number' %}
+                            <i class="fas fa-phone-alt field-icon"></i>
+                        {% elif field.name == 'name' %}
+                            <i class="fas fa-user field-icon"></i>
+                        {% elif field.name == 'location' %}
+                            <i class="fas fa-map-marker-alt field-icon"></i>
+                        {% endif %}
+                    </div>
+                    
+                    {% if field.errors %}
+                        <div class="error-msg animate__animated animate__headShake">
+                            <i class="fas fa-exclamation-circle"></i> {{ field.errors|striptags }}
+                        </div>
+                    {% else %}
+                        <small class="field-hint">{{ field.help_text }}</small>
+                    {% endif %}
+                </div>
+                {% endfor %}
+            </div>
+
+            <div class="form-footer">
+                <div class="button-row">
+                    <a href="{% url 'manager_dashboard' %}" class="btn-cancel">Cancel</a>
+                    <button type="submit" class="btn-submit" id="submitBtn">
+                        <span class="btn-text">Save Farmer Profile</span>
+                        <div class="spinner d-none" id="loader"></div>
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
+<style>
+    /* Premium Background */
+    .registration-wrapper {
+        min-height: 100vh;
+        background: #f0f2f5;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+        font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    }
+
+    /* Floating Card Effect */
+    .form-container {
+        width: 100%;
+        max-width: 480px;
+        background: #ffffff;
+        border-radius: 28px;
+        box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        overflow: hidden;
+        animation: fadeInUp 0.5s ease-out;
+    }
+
+    .form-header {
+        padding: 35px 30px 20px;
+        text-align: center;
+    }
+
+    .brand-icon {
+        width: 60px; height: 60px;
+        background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        color: white;
+        border-radius: 18px;
+        display: flex; align-items: center; justify-content: center;
+        margin: 0 auto 15px; font-size: 1.8rem;
+        box-shadow: 0 10px 15px -3px rgba(16, 185, 129, 0.3);
+    }
+
+    .header-text h2 { margin: 0; font-size: 1.5rem; font-weight: 800; color: #1e293b; }
+    .header-text p { color: #64748b; font-size: 0.9rem; margin-top: 4px; }
+
+    /* Progress Indicator */
+    .progress-container { width: 100%; height: 5px; background: #f1f5f9; border-radius: 10px; margin-top: 25px; }
+    .progress-bar { width: 0%; height: 100%; background: #10b981; border-radius: 10px; transition: width 0.4s ease; }
+
+    /* Inputs */
+    .form-body { padding: 0 30px 30px; }
+    .input-group-custom { margin-top: 20px; }
+    .input-group-custom label { font-size: 0.75rem; font-weight: 700; color: #475569; text-transform: uppercase; margin-bottom: 8px; display: block; }
+    
+    .input-relative { position: relative; }
+    .glass-input {
+        width: 100%; padding: 14px 14px 14px 45px;
+        border: 2px solid #e2e8f0; border-radius: 12px;
+        font-size: 1rem; transition: all 0.2s;
+        background: #f8fafc;
+    }
+    .glass-input:focus { border-color: #10b981; background: #fff; outline: none; box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.1); }
+    
+    .field-icon { position: absolute; left: 16px; top: 50%; transform: translateY(-50%); color: #94a3b8; font-size: 1rem; }
+    .field-hint { font-size: 0.7rem; color: #94a3b8; margin-top: 5px; display: block; }
+    .error-msg { color: #ef4444; font-size: 0.75rem; margin-top: 5px; font-weight: 600; }
+
+    /* Buttons */
+    .form-footer { padding: 20px 30px 35px; border-top: 1px solid #f1f5f9; }
+    .button-row { display: flex; align-items: center; gap: 15px; }
+    .btn-submit {
+        flex: 2; background: #1e293b; color: white; border: none; padding: 15px;
+        border-radius: 12px; font-weight: 700; cursor: pointer; transition: all 0.2s;
+    }
+    .btn-submit:hover { background: #0f172a; transform: translateY(-1px); }
+    .btn-cancel { flex: 1; text-align: center; color: #64748b; font-weight: 600; text-decoration: none; }
+
+    @keyframes fadeInUp {
+        from { opacity: 0; transform: translateY(15px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const form = document.getElementById('farmerForm');
+        const inputs = form.querySelectorAll('input');
+        const progress = document.getElementById('progressBar');
+
+        function updateProgress() {
+            let filled = 0;
+            inputs.forEach(input => {
+                if (input.value.trim() !== "") filled++;
+            });
+            const percent = (filled / inputs.length) * 100;
+            progress.style.width = percent + "%";
+        }
+
+        inputs.forEach(input => {
+            input.addEventListener('input', updateProgress);
+        });
+
+        form.addEventListener('submit', function() {
+            if (form.checkValidity()) {
+                document.getElementById('submitBtn').disabled = true;
+                document.getElementById('loader').classList.remove('d-none');
+                document.querySelector('.btn-text').classList.add('d-none');
+            }
+        });
+    });
+</script>
+{% endblock %}

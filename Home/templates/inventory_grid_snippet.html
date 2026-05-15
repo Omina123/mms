@@ -1,0 +1,49 @@
+<!-- Maize Card -->
+<div class="col-6 col-md-4 col-lg-2">
+    <div class="glass-card-sm border-primary">
+        <div class="stat-label text-muted fw-bold">Raw Maize</div>
+        <div class="stat-value text-primary">
+            {{ raw_stock }} <span class="stat-unit text-dark">Sacks</span>
+        </div>
+    </div>
+</div>
+
+<!-- Flour Card -->
+<div class="col-6 col-md-4 col-lg-2">
+    <div class="glass-card-sm border-success">
+        <div class="stat-label text-muted fw-bold">Unga</div>
+        <div class="stat-value text-success">
+            {{ live_unga|floatformat:0 }} <span class="stat-unit text-dark">Bales</span>
+        </div>
+    </div>
+</div>
+
+<!-- Germ Card -->
+<div class="col-6 col-md-4 col-lg-2">
+    <div class="glass-card-sm border-warning">
+        <div class="stat-label text-muted fw-bold">Germ</div>
+        <div class="stat-value text-warning">
+            {{ live_germ|floatformat:0 }} <span class="stat-unit text-dark">KG</span>
+        </div>
+    </div>
+</div>
+
+<!-- Bran Card -->
+<div class="col-6 col-md-4 col-lg-2">
+    <div class="glass-card-sm border-info">
+        <div class="stat-label text-muted fw-bold">Bran</div>
+        <div class="stat-value text-info">
+            {{ live_bran|floatformat:0 }} <span class="stat-unit text-dark">KG</span>
+        </div>
+    </div>
+</div>
+
+<!-- Milk Card -->
+<div class="col-6 col-md-4 col-lg-2">
+    <div class="glass-card-sm border-danger">
+        <div class="stat-label text-muted fw-bold">Milk Stock</div>
+        <div class="stat-value text-danger">
+            {{ live_milk|floatformat:1 }} <span class="stat-unit text-dark">Ltrs</span>
+        </div>
+    </div>
+</div>

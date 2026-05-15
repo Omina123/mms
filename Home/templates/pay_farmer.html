@@ -1,0 +1,84 @@
+{% extends 'base_admin.html' %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card border-0 shadow-lg" style="border-radius: 20px; overflow: hidden;">
+                <div class="bg-primary p-4 text-white text-center">
+                    <div class="avatar-lg bg-white-50 rounded-circle mx-auto mb-3 d-flex align-items-center justify-content-center" style="width: 70px; height: 70px; background: rgba(255,255,255,0.2);">
+                        <i class="fas fa-hand-holding-dollar fa-2x"></i>
+                    </div>
+                    <h3 class="fw-bold mb-1">Process Payout</h3>
+                    <p class="mb-0 opacity-75">Settling balances for {{ farmer.name }}</p>
+                </div>
+
+                <div class="card-body p-4 p-lg-5">
+                    <div class="row g-3 mb-4">
+                        <div class="col-6">
+                            <div class="p-3 bg-light rounded text-center border">
+                                <small class="text-muted d-block text-uppercase small fw-bold">Milk Balance</small>
+                                <span class="fw-bold text-dark">KES {{ farmer.milking_balance }}</span>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="p-3 bg-light rounded text-center border">
+                                <small class="text-muted d-block text-uppercase small fw-bold">Maize Balance</small>
+                                <span class="fw-bold text-dark">KES {{ farmer.milling_balance }}</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <form method="POST" class="needs-validation">
+                        {% csrf_token %}
+                        
+                        <div class="mb-4">
+                            <label class="form-label fw-bold">Select Category to Pay</label>
+                            <div class="d-flex gap-3">
+                                <input type="radio" class="btn-check" name="category" id="cat_milk" value="MILK" checked>
+                                <label class="btn btn-outline-primary w-50 py-2" for="cat_milk">🥛 Milk Payout</label>
+
+                                <input type="radio" class="btn-check" name="category" id="cat_maize" value="MAIZE">
+                                <label class="btn btn-outline-primary w-50 py-2" for="cat_maize">🌽 Maize Payout</label>
+                            </div>
+                        </div>
+
+                        <div class="mb-4">
+                            <label class="form-label fw-bold">Payout Amount</label>
+                            <div class="input-group input-group-lg">
+                                <span class="input-group-text bg-white border-end-0">KES</span>
+                                <input type="number" name="amount" step="0.01" class="form-control border-start-0 ps-0 fw-bold" placeholder="0.00" required>
+                            </div>
+                            <small class="text-muted">Total Owed: <strong>KES {{ total_due }}</strong></small>
+                        </div>
+
+                        <div class="mb-4">
+                            <label class="form-label fw-bold">Payment Method</label>
+                            <select name="method" class="form-select form-select-lg">
+                                <option value="CASH">💵 Physical Cash (Manual)</option>
+                                <option value="MPESA">📱 M-Pesa B2C (Automated)</option>
+                            </select>
+                        </div>
+
+                        <div class="mb-4">
+                            <label class="form-label fw-bold">Transaction Reference</label>
+                            <input type="text" name="reference" class="form-control" placeholder="M-Pesa Code or Receipt No." required>
+                        </div>
+
+                        <div class="alert alert-warning small border-0 shadow-sm">
+                            <i class="fas fa-circle-info me-2"></i> This action will immediately deduct from the farmer's ledger and update the SACCO liquidity dashboard.
+                        </div>
+
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-primary btn-lg rounded-pill shadow">
+                                Confirm & Post Payment
+                            </button>
+                            <a href="{% url 'farmer_listy' %}" class="btn btn-link text-muted text-decoration-none">Cancel Transaction</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

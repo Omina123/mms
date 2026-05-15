@@ -1,0 +1,200 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Farmers Registry | MillPro Admin{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Header Section: Sticky on Mobile for easy access -->
+    <div class="row mb-4 align-items-center g-3 sticky-top bg-light py-2 shadow-sm d-md-none" style="z-index: 1020; margin-top: -1.5rem;">
+        <div class="col-12">
+            <div class="input-group">
+                <span class="input-group-text border-0 bg-white"><i class="fas fa-search text-primary"></i></span>
+                <input type="text" id="mobileSearch" class="form-control border-0" placeholder="Search Farmer...">
+            </div>
+        </div>
+    </div>
+
+    <div class="d-none d-md-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h3 class="fw-900 m-0 text-dark">Farmers Registry</h3>
+            <p class="text-muted mb-0">Track produce intake and pending payments</p>
+        </div>
+        <div class="d-flex gap-2">
+            <div class="input-group shadow-sm" style="width: 300px;">
+                <span class="input-group-text bg-white border-end-0"><i class="fas fa-search text-muted"></i></span>
+                <input type="text" id="farmerSearch" class="form-control border-start-0 ps-0" placeholder="Search by name or ID...">
+            </div>
+            <button class="btn btn-primary rounded-pill px-4 shadow" data-bs-toggle="modal" data-bs-target="#addFarmerModal">
+                <i class="fas fa-plus me-2"></i>Add New
+            </button>
+        </div>
+    </div>
+
+    <!-- Stats Row (Quick Glance) -->
+    <div class="row g-3 mb-4">
+        <div class="col-6 col-md-3">
+            <div class="p-3 bg-white rounded-4 shadow-sm border-start border-primary border-4">
+                <small class="text-muted d-block uppercase-xs fw-bold">Total Farmers</small>
+                <h4 class="fw-900 m-0">{{ farmers.count }}</h4>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="p-3 bg-white rounded-4 shadow-sm border-start border-success border-4">
+                <small class="text-muted d-block uppercase-xs fw-bold">Active Debt</small>
+                <h4 class="fw-900 m-0 text-success">
+                    {% widthratio 1 1 0 as total_debt %} 
+                    <!-- You can calculate this in views.py for better performance -->
+                    KES ...
+                </h4>
+            </div>
+        </div>
+    </div>
+
+    <!-- Farmer Cards Grid -->
+    <div class="row g-3" id="farmerGrid">
+        {% for farmer in farmers %}
+        <div class="col-12 col-md-6 col-lg-4 farmer-card-container">
+            <div class="card h-100 border-0 shadow-sm rounded-4 overflow-hidden position-relative farmer-hover-card">
+                <!-- Top Accent Color -->
+                <div class="position-absolute top-0 start-0 end-0 bg-primary" style="height: 4px;"></div>
+                
+                <div class="card-body p-4">
+                    <!-- Status & ID -->
+                    <div class="d-flex justify-content-between align-items-start mb-3">
+                        <span class="badge rounded-pill {% if farmer.milling_balance > 0 or farmer.milking_balance > 0 %}bg-warning-light text-warning{% else %}bg-light text-muted{% endif %} px-3">
+                            <i class="fas fa-circle me-1 small"></i>
+                            {% if farmer.milling_balance > 0 or farmer.milking_balance > 0 %}Pending Payout{% else %}Cleared{% endif %}
+                        </span>
+                        <small class="text-muted fw-bold farmer-id">#{{ farmer.farmer_id }}</small>
+                    </div>
+
+                    <!-- Profile Info -->
+                    <div class="d-flex align-items-center mb-4">
+                        <div class="avatar-square rounded-3 bg-primary-light text-primary me-3">
+                            {{ farmer.name|slice:":1" }}
+                        </div>
+                        <div>
+                            <h5 class="fw-bold mb-0 farmer-name text-dark">{{ farmer.name }}</h5>
+                            <small class="text-muted"><i class="fas fa-map-marker-alt me-1"></i>{{ farmer.location|default:"N/A" }}</small>
+                        </div>
+                    </div>
+
+                    <!-- Intake Summary -->
+                    <div class="row g-2 text-center bg-light rounded-3 p-3 mb-4">
+                        <div class="col-6 border-end">
+                            <small class="text-muted d-block uppercase-xs">Maize</small>
+                            <span class="fw-bold">{{ farmer.total_maize|default:0 }} <small class="fw-normal">Sks</small></span>
+                        </div>
+                        <div class="col-6">
+                            <small class="text-muted d-block uppercase-xs">Milk</small>
+                            <span class="fw-bold text-danger">{{ farmer.total_milk|default:0|floatformat:1 }} <small class="fw-normal">Ltrs</small></span>
+                        </div>
+                    </div>
+
+                    <!-- Financials & Action -->
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <small class="text-muted d-block small-text">Current Balance</small>
+                            <h4 class="fw-900 text-success m-0">KES <span class="farmer-balance">{{ farmer.milling_balance|add:farmer.milking_balance|floatformat:0 }}</span></h4>
+                        </div>
+                        <div class="d-flex gap-2">
+                            <button class="btn btn-dark btn-sm rounded-pill px-3 btn-pay shadow-sm" 
+                                    data-id="{{ farmer.id }}" 
+                                    data-name="{{ farmer.name }}" 
+                                    data-owed="{{ farmer.milling_balance|add:farmer.milking_balance }}">
+                                <i class="fas fa-wallet me-1"></i>Pay
+                            </button>
+                            <a href="{% url 'farmer_detail' farmer.farmer_id %}" class="btn btn-outline-primary btn-sm rounded-circle shadow-sm">
+                                <i class="fas fa-chevron-right"></i>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <div class="col-12 text-center py-5">
+            <img src="https://cdn-icons-png.flaticon.com/512/4076/4076402.png" width="100" class="opacity-25 mb-3">
+            <h5 class="text-muted">No Farmers Registered</h5>
+            <p class="small text-muted">Click the "Add New" button to get started.</p>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<!-- Modal Payout (Referenced in previous response) -->
+{% include 'payout_modal.html' %}
+
+<style>
+    /* Styling variables to match MillPro Branding */
+    :root {
+        --primary-light: #eef2ff;
+        --warning-light: #fffbeb;
+        --success-light: #f0fdf4;
+    }
+
+    .fw-900 { font-weight: 900; }
+    .uppercase-xs { font-size: 0.65rem; letter-spacing: 0.8px; text-transform: uppercase; }
+    
+    .bg-primary-light { background-color: var(--primary-light); }
+    .bg-warning-light { background-color: var(--warning-light); }
+    
+    .avatar-square { 
+        width: 50px; height: 50px; 
+        display: flex; align-items: center; 
+        justify-content: center; font-weight: 800; font-size: 1.4rem; 
+    }
+
+    .farmer-hover-card {
+        transition: transform 0.2s ease, shadow 0.2s ease;
+    }
+
+    .farmer-hover-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 20px rgba(0,0,0,0.1) !important;
+    }
+
+    .btn-pay {
+        transition: all 0.3s ease;
+    }
+    
+    .btn-pay:hover {
+        background-color: #157347;
+        border-color: #157347;
+        transform: scale(1.05);
+    }
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Unified Search Logic (Desktop + Mobile)
+    const searchInputs = [document.getElementById('farmerSearch'), document.getElementById('mobileSearch')];
+    const cards = document.querySelectorAll('.farmer-card-container');
+
+    searchInputs.forEach(input => {
+        if(!input) return;
+        input.addEventListener('keyup', (e) => {
+            const val = e.target.value.toLowerCase();
+            cards.forEach(card => {
+                const name = card.querySelector('.farmer-name').innerText.toLowerCase();
+                const id = card.querySelector('.farmer-id').innerText.toLowerCase();
+                card.style.display = (name.includes(val) || id.includes(val)) ? "block" : "none";
+            });
+        });
+    });
+
+    // Payout Modal Triggers
+    document.querySelectorAll('.btn-pay').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const modal = new bootstrap.Modal(document.getElementById('payoutModal'));
+            document.getElementById('modalFarmerName').innerText = this.dataset.name;
+            document.getElementById('modalAmountOwed').innerText = parseFloat(this.dataset.owed).toLocaleString();
+            document.getElementById('modalFarmerId').value = this.dataset.id;
+            document.getElementById('payInput').value = this.dataset.owed;
+            modal.show();
+        });
+    });
+</script>
+{% endblock %}

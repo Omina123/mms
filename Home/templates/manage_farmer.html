@@ -1,0 +1,100 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row">
+        <div class="col-lg-4">
+            <div class="glass-card p-4 shadow-sm mb-4">
+                <h4 class="fw-bold mb-4">Edit Profile: {{ farmer.farmer_id }}</h4>
+                <form method="POST">
+                    {% csrf_token %}
+                    {{ form.as_p }}
+                    <button type="submit" name="update_farmer" class="btn btn-primary w-100 rounded-pill shadow-sm">Update Profile</button>
+                </form>
+                
+                <hr>
+                <div class="mt-3">
+                    <p class="mb-1 text-muted small">Milling Balance (Maize)</p>
+                    <h5 class="fw-bold text-success">KES {{ farmer.milling_balance }}</h5>
+                    <p class="mb-1 text-muted small mt-3">Milking Balance (Milk)</p>
+                    <h5 class="fw-bold text-primary">KES {{ farmer.milking_balance }}</h5>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-8">
+            <div class="glass-card p-4 shadow-sm mb-4">
+                <h5 class="fw-bold mb-3 text-warning"><i class="fas fa-seedling"></i> Maize History</h5>
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Date</th>
+                                <th>Sacks</th>
+                                <th>Price</th>
+                                <th>Total</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for record in maize_records %}
+                            <tr>
+                                <td>{{ record.date|date:"d M Y" }}</td>
+                                <td>{{ record.sacks_delivered }}</td>
+                                <td>{{ record.price_per_sack }}</td>
+                                <td class="fw-bold">KES {{ record.total_credit }}</td>
+                                <td>
+                                        <a href="{% url 'generate_receipt' 'maize' record.id %}" target="_blank" class="text-dark ms-2">
+    <i class="fas fa-print"></i>
+</a>
+                                    <a href="{% url 'edit_maize' record.id %}" class="text-primary me-2"><i class="fas fa-edit"></i></a>
+                                    <a href="{% url 'delete_maize' record.id %}" class="text-danger" onclick="return confirm('Delete this record?')"><i class="fas fa-trash"></i></a>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr><td colspan="5" class="text-center">No maize records.</td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="glass-card p-4 shadow-sm">
+                <h5 class="fw-bold mb-3 text-info"><i class="fas fa-wine-bottle"></i> Milk History</h5>
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Date</th>
+                                <th>Litres</th>
+                                <th>Price</th>
+                                <th>Total</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for record in milk_records %}
+                            <tr>
+                                <td>{{ record.date|date:"d M Y" }}</td>
+                                <td>{{ record.litres }}</td>
+                                <td>{{ record.buying_price }}</td>
+                                <td class="fw-bold">KES {{ record.total_cost }}</td>
+                                <td>    
+                                    <a href="{% url 'generate_receipt' 'milk' record.id %}" target="_blank" class="text-dark ms-2">
+    <i class="fas fa-print"></i>
+</a>
+                                    <a href="{% url 'edit_milk' record.id %}" class="text-primary me-2"><i class="fas fa-edit"></i></a>
+                                    <a href="{% url 'delete_milk' record.id %}" class="text-danger" onclick="return confirm('Delete this record?')"><i class="fas fa-trash"></i></a>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr><td colspan="5" class="text-center">No milk records.</td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

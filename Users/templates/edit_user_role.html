@@ -1,0 +1,22 @@
+{% extends 'baseAdmin.html' %}
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card shadow">
+                <div class="card-body">
+                    <h3>Edit Role: {{ target_user.username }}</h3>
+                    <form method="POST">
+                        {% csrf_token %}
+                        {{ form.as_p }}
+                        <div class="mt-4">
+                            <button type="submit" class="btn btn-primary">Update User</button>
+                            <a href="{% url 'users_system' %}" class="btn btn-link">Cancel</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

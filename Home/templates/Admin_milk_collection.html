@@ -1,0 +1,239 @@
+{% extends 'base_admin.html' %}
+
+{% block content %}
+<style>
+    :root {
+        --primary-gradient: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+        --accent-color: #3b82f6;
+    }
+
+    .glass-card {
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(10px);
+        border-radius: 24px;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+
+    .input-group-custom {
+        transition: all 0.3s ease;
+        border-radius: 12px;
+        overflow: hidden;
+        border: 2px solid #e2e8f0;
+    }
+
+    .input-group-custom:focus-within {
+        border-color: var(--accent-color);
+        box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
+        transform: translateY(-2px);
+    }
+
+    .form-control-lg {
+        border: none !important;
+        font-weight: 600;
+    }
+
+    .payout-container {
+        background: var(--primary-gradient);
+        color: white;
+        border-radius: 20px;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .payout-container::after {
+        content: '';
+        position: absolute;
+        top: -50%;
+        left: -50%;
+        width: 200%;
+        height: 200%;
+        background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+        pointer-events: none;
+    }
+
+    .counter-anim {
+        font-variant-numeric: tabular-nums;
+    }
+
+    .btn-save {
+        background: var(--primary-gradient);
+        color: white;
+        border: none;
+        padding: 15px 30px;
+        border-radius: 12px;
+        font-weight: 800;
+        letter-spacing: 1px;
+        transition: all 0.3s;
+    }
+
+    .btn-save:hover {
+        transform: scale(1.02);
+        box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+    }
+
+    /* Animation classes */
+    .pulse-green { animation: pulseGreen 0.5s ease-in-out; }
+    @keyframes pulseGreen {
+        0% { transform: scale(1); }
+        50% { transform: scale(1.05); color: #10b981; }
+        100% { transform: scale(1); }
+    }
+</style>
+<div class="container py-4">
+    {% if messages %}
+        <div class="row justify-content-center mb-3">
+            <div class="col-lg-10">
+                {% for message in messages %}
+                    <div class="alert alert-{{ message.tags }} alert-dismissible fade show border-0 shadow-sm mb-2" role="alert">
+                        {% if message.tags == 'success' %}<i class="fas fa-check-circle me-2"></i>
+                        {% else %}<i class="fas fa-exclamation-triangle me-2"></i>{% endif %}
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+
+<div class="container mt-5 mb-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-6 col-md-8">
+            <div class="glass-card shadow-2xl p-0 overflow-hidden animate__animated animate__fadeInUp">
+                
+                <!-- Header Section -->
+                <div class="p-4 text-center border-bottom bg-light">
+                    <div class="d-inline-block bg-primary text-white p-3 rounded-circle mb-3 shadow">
+                        <i class="fas fa-truck-loading fa-2x"></i>
+                    </div>
+                    <h3 class="fw-800 text-dark mb-0">Farmer Milk Intake</h3>
+                    <p class="text-muted small">Update cold-room inventory and calculate payouts</p>
+                </div>
+
+                <div class="p-4 p-md-5">
+                    <form method="POST" id="collectionForm" class="needs-validation" novalidate>
+                        {% csrf_token %}
+                        
+                        <div class="mb-4">
+                            <label class="small fw-800 text-muted mb-2 text-uppercase">Select Farmer</label>
+                            <div class="input-group-custom">
+                                {{ form.farmer }}
+                            </div>
+                        </div>
+
+                        <div class="row mb-4">
+                            <div class="col-6">
+                                <label class="small fw-800 text-muted mb-2 text-uppercase">Quantity (Ltrs)</label>
+                                <div class="input-group-custom d-flex align-items-center px-2">
+                                    <i class="fas fa-tint text-primary ms-2"></i>
+                                    {{ form.litres }}
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <label class="small fw-800 text-muted mb-2 text-uppercase">Rate (per L)</label>
+                                <div class="input-group-custom d-flex align-items-center px-2">
+                                    <i class="fas fa-tag text-success ms-2"></i>
+                                    {{ form.buying_price }}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mb-4">
+                            <label class="small fw-800 text-muted mb-2 text-uppercase">Transaction Date</label>
+                            <div class="input-group-custom d-flex align-items-center px-2">
+                                <i class="fas fa-calendar text-muted ms-2"></i>
+                                {{ form.date }}
+                            </div>
+                        </div>
+
+                        <!-- Interactive Payout Display -->
+                        <div class="payout-container p-4 mb-4 text-center shadow-inner">
+                            <span class="opacity-75 small fw-bold d-block mb-1">TOTAL PAYOUT AMOUNT</span>
+                            <h1 class="fw-900 mb-0 counter-anim">
+                                <span class="fs-4 fw-light">KES</span> 
+                                <span id="payout_val">0.00</span>
+                            </h1>
+                        </div>
+
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn-save shadow">
+                                <i class="fas fa-check-circle me-2"></i>CONFIRM COLLECTION
+                            </button>
+                            <a href="{% url 'manager_dashboard' %}" class="btn btn-link text-muted fw-bold text-decoration-none">Cancel Transaction</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const litresInput = document.querySelector('input[name="litres"]');
+        const priceInput = document.querySelector('input[name="buying_price"]');
+        const display = document.getElementById('payout_val');
+        const form = document.getElementById('collectionForm');
+
+        // Add Bootstrap classes via JS to keep the template clean
+        [litresInput, priceInput].forEach(el => {
+            el.classList.add('form-control', 'form-control-lg');
+        });
+
+        // Numerical Animation Logic
+        let currentDisplayValue = 0;
+
+        function animateNumber(target) {
+            const start = currentDisplayValue;
+            const duration = 400; // ms
+            let startTime = null;
+
+            function step(timestamp) {
+                if (!startTime) startTime = timestamp;
+                const progress = Math.min((timestamp - startTime) / duration, 1);
+                const val = progress * (target - start) + start;
+                
+                display.innerText = val.toLocaleString(undefined, {
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2
+                });
+
+                if (progress < 1) {
+                    window.requestAnimationFrame(step);
+                }
+            }
+            window.requestAnimationFrame(step);
+            currentDisplayValue = target;
+        }
+
+        function updatePrice() {
+            const l = parseFloat(litresInput.value) || 0;
+            const p = parseFloat(priceInput.value) || 0;
+            const total = l * p;
+            
+            // Visual feedback: pulse the numbers on change
+            display.classList.remove('pulse-green');
+            void display.offsetWidth; // Trigger reflow
+            display.classList.add('pulse-green');
+
+            animateNumber(total);
+        }
+
+        // Real-time Listeners
+        litresInput.addEventListener('input', updatePrice);
+        priceInput.addEventListener('input', updatePrice);
+
+        // Fun Form Submission
+        form.addEventListener('submit', function(e) {
+            if (!this.checkValidity()) {
+                e.preventDefault();
+                e.stopPropagation();
+            } else {
+                const btn = this.querySelector('.btn-save');
+                btn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i> PROCESSING...';
+                btn.style.opacity = '0.7';
+                btn.style.pointerEvents = 'none';
+            }
+        });
+    });
+</script>
+{% endblock %}

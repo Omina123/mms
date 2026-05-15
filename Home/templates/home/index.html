@@ -1,0 +1,519 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <title>Milky - Dairy  and Milling</title>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport">
+    <meta content="" name="keywords">
+    <meta content="" name="description">
+
+    <link href="static/img/favicon.ico" rel="icon">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:wght@700&family=Open+Sans:wght@400;500;600&display=swap" rel="stylesheet">   
+
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.10.0/css/all.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.4.1/font/bootstrap-icons.css" rel="stylesheet">
+
+    <link href="static/lib/animate/animate.min.css" rel="stylesheet">
+    <link href="static/lib/owlcarousel/assets/owl.carousel.min.css" rel="stylesheet">
+    <link href="static/lib/lightbox/css/lightbox.min.css" rel="stylesheet">
+
+    <link href="static/css/bootstrap.min.css" rel="stylesheet">
+
+    <link href="static/css/style.css" rel="stylesheet">
+</head>
+
+<body>
+    <div id="spinner" class="show bg-white position-fixed translate-middle w-100 vh-100 top-50 start-50 d-flex align-items-center justify-content-center">
+        <div class="spinner-border text-primary" role="status" style="width: 3rem; height: 3rem;"></div>
+    </div>
+    <div class="container-fluid bg-dark px-0">
+        <div class="row g-0 d-none d-lg-flex">
+            <div class="col-lg-6 ps-5 text-start">
+                <div class="h-100 d-inline-flex align-items-center text-light">
+                    <span>Follow Us:</span>
+                    <a class="btn btn-link text-light" href=""><i class="fab fa-facebook-f"></i></a>
+                    <a class="btn btn-link text-light" href=""><i class="fab fa-twitter"></i></a>
+                    <a class="btn btn-link text-light" href=""><i class="fab fa-linkedin-in"></i></a>
+                    <a class="btn btn-link text-light" href=""><i class="fab fa-instagram"></i></a>
+                </div>
+            </div>
+            <div class="col-lg-6 text-end">
+                <div class="h-100 bg-secondary d-inline-flex align-items-center text-dark py-2 px-4">
+                    <span class="me-2 fw-semi-bold"><i class="fa fa-phone-alt me-2"></i>Call Us:</span>
+                    <span>+012 345 6789</span>
+                </div>
+            </div>
+        </div>
+    </div>
+    <nav class="navbar navbar-expand-lg bg-white navbar-light sticky-top px-4 px-lg-5">
+        <a href="{% url 'home' %}" class="navbar-brand d-flex align-items-center">
+            <h1 class="m-0">Milky and Milling </h1>
+        </a>
+        <button type="button" class="navbar-toggler me-0" data-bs-toggle="collapse" data-bs-target="#navbarCollapse">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarCollapse">
+            <div class="navbar-nav ms-auto p-4 p-lg-0">
+                <a href="{% url 'home' %}" class="nav-item nav-link active">Home</a>
+                <a href="#" class="nav-item nav-link">About</a>
+                <a href="#" class="nav-item nav-link">Services</a>
+                <a href="{% url 'Login' %}" class="nav-item nav-link">Staff</a>
+                <div class="nav-item dropdown">
+                    <a href="#" class="nav-link dropdown-toggle" data-bs-toggle="dropdown">Pages</a>
+                    <div class="dropdown-menu bg-light m-0">
+                        <a href="#" class="dropdown-item">Gallery</a>
+                        <a href="#" class="dropdown-item">Features</a>
+                        <a href="#" class="dropdown-item">Our Team</a>
+                        <a href="#" class="dropdown-item">Testimonial</a>
+                        <a href="#" class="dropdown-item">404 Page</a>
+                    </div>
+                </div>
+                <a href="#" class="nav-item nav-link">Contact</a>
+            </div>
+            <div class="border-start ps-4 d-none d-lg-block">
+                <button type="button" class="btn btn-sm p-0"><i class="fa fa-search"></i></button>
+            </div>
+        </div>
+    </nav>
+    <div class="container-fluid px-0 mb-5">
+        <div id="header-carousel" class="carousel slide" data-bs-ride="carousel">
+            <div class="carousel-inner">
+                <div class="carousel-item active">
+                    <img class="w-100" src="static/img/carousel-1.jpg" alt="Image">
+                    <div class="carousel-caption">
+                        <div class="container">
+                            <div class="row justify-content-start">
+                                <div class="col-lg-8 text-start">
+                                    <p class="fs-4 text-white">Advanced Dairy Solutions</p>
+                                    <h1 class="display-1 text-white mb-5 animated slideInRight">Efficient Milking Collection Systems</h1>
+                                    <a href="" class="btn btn-secondary rounded-pill py-3 px-5 animated slideInRight">Explore Collection</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="carousel-item">
+                    <img class="w-100" src="static/img/carousel-2.jpg" alt="Image">
+                    <div class="carousel-caption">
+                        <div class="container">
+                            <div class="row justify-content-end">
+                                <div class="col-lg-8 text-end">
+                                    <p class="fs-4 text-white">Precision Nutrition</p>
+                                    <h1 class="display-1 text-white mb-5 animated slideInRight">Professional Grain Milling Services</h1>
+                                    <a href="" class="btn btn-secondary rounded-pill py-3 px-5 animated slideInLeft">Learn About Milling</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <button class="carousel-control-prev" type="button" data-bs-target="#header-carousel"
+                data-bs-slide="prev">
+                <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                <span class="visually-hidden">Previous</span>
+            </button>
+            <button class="carousel-control-next" type="button" data-bs-target="#header-carousel"
+                data-bs-slide="next">
+                <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                <span class="visually-hidden">Next</span>
+            </button>
+        </div>
+    </div>
+    <div class="container-xxl py-5">
+        <div class="container">
+            <div class="row g-5 align-items-end">
+                <div class="col-lg-6">
+                    <div class="row g-2">
+                        <div class="col-6 position-relative wow fadeIn" data-wow-delay="0.7s">
+                            {% comment %} <div class="about-experience bg-secondary rounded">
+                                <h1 class="display-1 mb-0">25</h1>
+                                <small class="fs-5 fw-bold">Years Experience</small>
+                            </div> {% endcomment %}
+                        </div>
+                        <div class="col-6 wow fadeIn" data-wow-delay="0.1s">
+                            <img class="img-fluid rounded" src="static/home/img/service-1.jpg">
+                        </div>
+                        <div class="col-6 wow fadeIn" data-wow-delay="0.3s">
+                            <img class="img-fluid rounded" src="static/img/service-2.jpg">
+                        </div>
+                        <div class="col-6 wow fadeIn" data-wow-delay="0.5s">
+                            <img class="img-fluid rounded" src="static/img/service-3.jpg">
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-6 wow fadeIn" data-wow-delay="0.5s">
+                    <p class="section-title bg-white text-start text-primary pe-3">About Us</p>
+                    <h1 class="mb-4">Experts in Milking and Feed Milling</h1>
+                    <p class="mb-4">We specialize in bridging the gap between raw production and high-quality output. Our systems ensure that milking collection is handled with precision and that feed milling provides the perfect nutritional balance for your livestock.</p>
+                    <div class="row g-5 pt-2 mb-5">
+                        <div class="col-sm-6">
+                            <img class="img-fluid mb-4" src="static/img/service.png" alt="">
+                            <h5 class="mb-3">Collection Logistics</h5>
+                            <span>Streamlined milk collection from farm to storage with real-time tracking.</span>
+                        </div>
+                        <div class="col-sm-6">
+                            <img class="img-fluid mb-4" src="static/img/product.png" alt="">
+                            <h5 class="mb-3">Milling Excellence</h5>
+                            <span>State-of-the-art milling technology for superior livestock feed production.</span>
+                        </div>
+                    </div>
+                    <a class="btn btn-secondary rounded-pill py-3 px-5" href="">Explore More</a>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="container-xxl py-5">
+        <div class="container">
+            <div class="row g-5 align-items-center">
+                <div class="col-lg-6 wow fadeInUp" data-wow-delay="0.1s">
+                    <p class="section-title bg-white text-start text-primary pe-3">Why Us!</p>
+                    <h1 class="mb-4">Why Choose Our Collection & Milling Services?</h1>
+                    <p class="mb-4">We provide integrated solutions that optimize the two most critical aspects of dairy management: harvesting product and providing nutrition.</p>
+                    <p><i class="fa fa-check text-primary me-3"></i>Hygienic Milking Collection</p>
+                    <p><i class="fa fa-check text-primary me-3"></i>Custom Nutrient Feed Milling</p>
+                    <p><i class="fa fa-check text-primary me-3"></i>Scalable Production Workflows</p>
+                    <a class="btn btn-secondary rounded-pill py-3 px-5 mt-3" href="">Explore More</a>
+                </div>
+                <div class="col-lg-6">
+                    <div class="rounded overflow-hidden">
+                        <div class="row g-0">
+                            <div class="col-sm-6 wow fadeIn" data-wow-delay="0.1s">
+                                <div class="text-center bg-primary py-5 px-4">
+                                    <img class="img-fluid mb-4" src="static/img/experience.png" alt="">
+                                    <h1 class="display-6 text-white" data-toggle="counter-up">25</h1>
+                                    <span class="fs-5 fw-semi-bold text-secondary">Years Experience</span>
+                                </div>
+                            </div>
+                            <div class="col-sm-6 wow fadeIn" data-wow-delay="0.3s">
+                                <div class="text-center bg-secondary py-5 px-4">
+                                    <img class="img-fluid mb-4" src="static/img/award.png" alt="">
+                                    <h1 class="display-6" data-toggle="counter-up">183</h1>
+                                    <span class="fs-5 fw-semi-bold text-primary">Award Winning</span>
+                                </div>
+                            </div>
+                            <div class="col-sm-6 wow fadeIn" data-wow-delay="0.5s">
+                                <div class="text-center bg-secondary py-5 px-4">
+                                    <img class="img-fluid mb-4" src="static/img/animal.png" alt="">
+                                    <h1 class="display-6" data-toggle="counter-up">2619</h1>
+                                    <span class="fs-5 fw-semi-bold text-primary">Total Animals</span>
+                                </div>
+                            </div>
+                            <div class="col-sm-6 wow fadeIn" data-wow-delay="0.7s">
+                                <div class="text-center bg-primary py-5 px-4">
+                                    <img class="img-fluid mb-4" src="static/img/client.png" alt="">
+                                    <h1 class="display-6 text-white" data-toggle="counter-up">51940</h1>
+                                    <span class="fs-5 fw-semi-bold text-secondary">Happy Clients</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="container-fluid banner my-5 py-5" data-parallax="scroll" data-image-src="static/img/banner.jpg">
+        <div class="container py-5">
+            <div class="row g-5">
+                <div class="col-lg-6 wow fadeIn" data-wow-delay="0.3s">
+                    <div class="row g-4 align-items-center">
+                        <div class="col-sm-4">
+                            <img class="img-fluid rounded" src="static/img/banner-1.jpg" alt="">
+                        </div>
+                        <div class="col-sm-8">
+                            <h2 class="text-white mb-3">Professional Feed Milling</h2>
+                            <p class="text-white mb-4">High-capacity milling services to create the best organic feed for your dairy cattle.</p>
+                            <a class="btn btn-secondary rounded-pill py-2 px-4" href="">Read More</a>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-6 wow fadeIn" data-wow-delay="0.5s">
+                    <div class="row g-4 align-items-center">
+                        <div class="col-sm-4">
+                            <img class="img-fluid rounded" src="static/img/banner-2.jpg" alt="">
+                        </div>
+                        <div class="col-sm-8">
+                            <h2 class="text-white mb-3">Daily Milking Collection</h2>
+                            <p class="text-white mb-4">Ensuring your milk reaches processing centers fresh and on time every single day.</p>
+                            <a class="btn btn-secondary rounded-pill py-2 px-4" href="">Read More</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="container-xxl py-5">
+        <div class="container">
+            <div class="text-center mx-auto pb-4 wow fadeInUp" data-wow-delay="0.1s" style="max-width: 500px;">
+                <p class="section-title bg-white text-center text-primary px-3">Our Core Services</p>
+                <h1 class="mb-5">Specialized Solutions for Milking & Milling</h1>
+            </div>
+            <div class="row gy-5 gx-4">
+                <div class="col-lg-4 col-md-6 pt-5 wow fadeInUp" data-wow-delay="0.1s">
+                    <div class="service-item d-flex h-100">
+                        <div class="service-img">
+                            <img class="img-fluid" src="static/img/service-1.jpg" alt="">
+                        </div>
+                        <div class="service-text p-5 pt-0">
+                            <div class="service-icon">
+                                <img class="img-fluid rounded-circle" src="static/img/service-1.jpg" alt="">
+                            </div>
+                            <h5 class="mb-3">Automated Milking Collection</h5>
+                            <p class="mb-4">Secure and hygienic collection of raw milk using modern technology to maintain peak freshness.</p>
+                            <a class="btn btn-square rounded-circle" href=""><i class="bi bi-chevron-double-right"></i></a>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-4 col-md-6 pt-5 wow fadeInUp" data-wow-delay="0.3s">
+                    <div class="service-item d-flex h-100">
+                        <div class="service-img">
+                            <img class="img-fluid" src="static/img/service-2.jpg" alt="">
+                        </div>
+                        <div class="service-text p-5 pt-0">
+                            <div class="service-icon">
+                                <img class="img-fluid rounded-circle" src="static/img/service-2.jpg" alt="">
+                            </div>
+                            <h5 class="mb-3">High-Efficiency Milling</h5>
+                            <p class="mb-4">Transforming raw grains into high-protein animal feed through our precision milling facilities.</p>
+                            <a class="btn btn-square rounded-circle" href=""><i class="bi bi-chevron-double-right"></i></a>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-4 col-md-6 pt-5 wow fadeInUp" data-wow-delay="0.5s">
+                    <div class="service-item d-flex h-100">
+                        <div class="service-img">
+                            <img class="img-fluid" src="static/img/service-3.jpg" alt="">
+                        </div>
+                        <div class="service-text p-5 pt-0">
+                            <div class="service-icon">
+                                <img class="img-fluid rounded-circle" src="static/img/service-3.jpg" alt="">
+                            </div>
+                            <h5 class="mb-3">Logistics & Storage</h5>
+                            <p class="mb-4">Coordinating the delivery of collected milk and milled feed to ensure your farm never stops producing.</p>
+                            <a class="btn btn-square rounded-circle" href=""><i class="bi bi-chevron-double-right"></i></a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="container-xxl py-5 px-0">
+        <div class="row g-0">
+            <div class="col-lg-3 col-md-6 wow fadeInUp" data-wow-delay="0.1s">
+                <div class="row g-0">
+                    <div class="col-12">
+                        <a class="d-block" href="static/img/gallery-5.jpg" data-lightbox="gallery">
+                            <img class="img-fluid" src="static/img/gallery-5.jpg" alt="">
+                        </a>
+                    </div>
+                    <div class="col-12">
+                        <a class="d-block" href="static/img/gallery-1.jpg" data-lightbox="gallery">
+                            <img class="img-fluid" src="static/img/gallery-1.jpg" alt="">
+                        </a>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-3 col-md-6 wow fadeInUp" data-wow-delay="0.3s">
+                <div class="row g-0">
+                    <div class="col-12">
+                        <a class="d-block" href="static/img/gallery-2.jpg" data-lightbox="gallery">
+                            <img class="img-fluid" src="static/img/gallery-2.jpg" alt="">
+                        </a>
+                    </div>
+                    <div class="col-12">
+                        <a class="d-block" href="static/img/gallery-6.jpg" data-lightbox="gallery">
+                            <img class="img-fluid" src="static/img/gallery-6.jpg" alt="">
+                        </a>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-3 col-md-6 wow fadeInUp" data-wow-delay="0.5s">
+                <div class="row g-0">
+                    <div class="col-12">
+                        <a class="d-block" href="static/img/gallery-7.jpg" data-lightbox="gallery">
+                            <img class="img-fluid" src="static/img/gallery-7.jpg" alt="">
+                        </a>
+                    </div>
+                    <div class="col-12">
+                        <a class="d-block" href="static/img/gallery-3.jpg" data-lightbox="gallery">
+                            <img class="img-fluid" src="static/img/gallery-3.jpg" alt="">
+                        </a>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-3 col-md-6 wow fadeInUp" data-wow-delay="0.7s">
+                <div class="row g-0">
+                    <div class="col-12">
+                        <a class="d-block" href="static/img/gallery-4.jpg" data-lightbox="gallery">
+                            <img class="img-fluid" src="static/img/gallery-4.jpg" alt="">
+                        </a>
+                    </div>
+                    <div class="col-12">
+                        <a class="d-block" href="static/img/gallery-8.jpg" data-lightbox="gallery">
+                            <img class="img-fluid" src="static/img/gallery-8.jpg" alt="">
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="container-xxl py-5">
+        <div class="container">
+            <div class="text-center mx-auto wow fadeInUp" data-wow-delay="0.1s" style="max-width: 500px;">
+                <p class="section-title bg-white text-center text-primary px-3">Our Products</p>
+                <h1 class="mb-5">Quality Outputs From Our Collection & Milling</h1>
+            </div>
+            <div class="row gx-4">
+                <div class="col-md-6 col-lg-4 col-xl-3 wow fadeInUp" data-wow-delay="0.1s">
+                    <div class="product-item">
+                        <div class="position-relative">
+                            <img class="img-fluid" src="static/img/product-1.jpg" alt="">
+                            <div class="product-overlay">
+                                <a class="btn btn-square btn-secondary rounded-circle m-1" href=""><i class="bi bi-link"></i></a>
+                                <a class="btn btn-square btn-secondary rounded-circle m-1" href=""><i class="bi bi-cart"></i></a>
+                            </div>
+                        </div>
+                        <div class="text-center p-4">
+                            <a class="d-block h5" href="">Bulk Raw Milk</a>
+                            <span class="text-primary me-1">Daily Collection</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6 col-lg-4 col-xl-3 wow fadeInUp" data-wow-delay="0.3s">
+                    <div class="product-item">
+                        <div class="position-relative">
+                            <img class="img-fluid" src="static/img/product-2.jpg" alt="">
+                            <div class="product-overlay">
+                                <a class="btn btn-square btn-secondary rounded-circle m-1" href=""><i class="bi bi-link"></i></a>
+                                <a class="btn btn-square btn-secondary rounded-circle m-1" href=""><i class="bi bi-cart"></i></a>
+                            </div>
+                        </div>
+                        <div class="text-center p-4">
+                            <a class="d-block h5" href="">Premium Cattle Feed</a>
+                            <span class="text-primary me-1">Milled Grain</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6 col-lg-4 col-xl-3 wow fadeInUp" data-wow-delay="0.5s">
+                    <div class="product-item">
+                        <div class="position-relative">
+                            <img class="img-fluid" src="static/img/product-3.jpg" alt="">
+                            <div class="product-overlay">
+                                <a class="btn btn-square btn-secondary rounded-circle m-1" href=""><i class="bi bi-link"></i></a>
+                                <a class="btn btn-square btn-secondary rounded-circle m-1" href=""><i class="bi bi-cart"></i></a>
+                            </div>
+                        </div>
+                        <div class="text-center p-4">
+                            <a class="d-block h5" href="">Organic Supplements</a>
+                            <span class="text-primary me-1">Custom Milling</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6 col-lg-4 col-xl-3 wow fadeInUp" data-wow-delay="0.7s">
+                    <div class="product-item">
+                        <div class="position-relative">
+                            <img class="img-fluid" src="static/img/product-4.jpg" alt="">
+                            <div class="product-overlay">
+                                <a class="btn btn-square btn-secondary rounded-circle m-1" href=""><i class="bi bi-link"></i></a>
+                                <a class="btn btn-square btn-secondary rounded-circle m-1" href=""><i class="bi bi-cart"></i></a>
+                            </div>
+                        </div>
+                        <div class="text-center p-4">
+                            <a class="d-block h5" href="">Storage Solutions</a>
+                            <span class="text-primary me-1">Collection Grade</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="container-xxl py-5">
+        <div class="container">
+            <div class="text-center mx-auto wow fadeInUp" data-wow-delay="0.1s" style="max-width: 500px;">
+                <p class="section-title bg-white text-center text-primary px-3">Our Team</p>
+                <h1 class="mb-5">Experienced Experts</h1>
+            </div>
+            <div class="row g-4">
+                <div class="col-lg-4 col-md-6 wow fadeInUp" data-wow-delay="0.1s">
+                    <div class="team-item rounded p-4">
+                        <img class="img-fluid rounded mb-4" src="static/img/team-1.jpg" alt="">
+                        <h5>Adam Crew</h5>
+                        <p class="text-primary">Collection Head</p>
+                        <div class="d-flex justify-content-center">
+                            <a class="btn btn-square btn-outline-secondary rounded-circle mx-1" href=""><i class="fab fa-facebook-f"></i></a>
+                            <a class="btn btn-square btn-outline-secondary rounded-circle mx-1" href=""><i class="fab fa-twitter"></i></a>
+                            <a class="btn btn-square btn-outline-secondary rounded-circle mx-1" href=""><i class="fab fa-instagram"></i></a>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-4 col-md-6 wow fadeInUp" data-wow-delay="0.3s">
+                    <div class="team-item rounded p-4">
+                        <img class="img-fluid rounded mb-4" src="static/img/team-2.jpg" alt="">
+                        <h5>Doris Jordan</h5>
+                        <p class="text-primary">Milling Specialist</p>
+                        <div class="d-flex justify-content-center">
+                            <a class="btn btn-square btn-outline-secondary rounded-circle mx-1" href=""><i class="fab fa-facebook-f"></i></a>
+                            <a class="btn btn-square btn-outline-secondary rounded-circle mx-1" href=""><i class="fab fa-twitter"></i></a>
+                            <a class="btn btn-square btn-outline-secondary rounded-circle mx-1" href=""><i class="fab fa-instagram"></i></a>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-4 col-md-6 wow fadeInUp" data-wow-delay="0.5s">
+                    <div class="team-item rounded p-4">
+                        <img class="img-fluid rounded mb-4" src="static/img/team-3.jpg" alt="">
+                        <h5>Jack Dawson</h5>
+                        <p class="text-primary">Logistics Manager</p>
+                        <div class="d-flex justify-content-center">
+                            <a class="btn btn-square btn-outline-secondary rounded-circle mx-1" href=""><i class="fab fa-facebook-f"></i></a>
+                            <a class="btn btn-square btn-outline-secondary rounded-circle mx-1" href=""><i class="fab fa-twitter"></i></a>
+                            <a class="btn btn-square btn-outline-secondary rounded-circle mx-1" href=""><i class="fab fa-instagram"></i></a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="container-xxl py-5">
+        <div class="container">
+            <div class="text-center mx-auto wow fadeInUp" data-wow-delay="0.1s" style="max-width: 500px;">
+                <p class="section-title bg-white text-center text-primary px-3">Testimonial</p>
+                <h1 class="mb-5">What Clients Say About Our Dairy Services</h1>
+            </div>
+            <div class="row g-5 align-items-center">
+                <div class="col-lg-5 wow fadeInUp" data-wow-delay="0.1s">
+                    <div class="testimonial-img">
+                        <img class="img-fluid animated pulse infinite" src="static/img/testimonial-1.jpg" alt="">
+                        <img class="img-fluid animated pulse infinite" src="static/img/testimonial-2.jpg" alt="">
+                        <img class="img-fluid animated pulse infinite" src="static/img/testimonial-3.jpg" alt="">
+                        <img class="img-fluid animated pulse infinite" src="static/img/testimonial-4.jpg" alt="">
+                    </div>
+                </div>
+                <div class="col-lg-7 wow fadeInUp" data-wow-delay="0.5s">
+                    <div class="owl-carousel testimonial-carousel">
+                        <div class="testimonial-item">
+                            <h5>John Smith</h5>
+                            <span class="text-primary">Dairy Farmer</span>
+                            <p class="fs-5">The milling quality has significantly improved my herd's milk output. Professional and reliable!</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="https://code.jquery.com/jquery-3.4.1.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="static/lib/wow/wow.min.js"></script>
+    <script src="static/lib/easing/easing.min.js"></script>
+    <script src="static/lib/waypoints/waypoints.min.js"></script>
+    <script src="static/lib/owlcarousel/owl.carousel.min.js"></script>
+    <script src="static/lib/counterup/counterup.min.js"></script>
+    <script src="static/lib/parallax/parallax.min.js"></script>
+    <script src="static/lib/lightbox/js/lightbox.min.js"></script>
+
+<script src="static/js/main.js"></script>
+</body>
+
+</html>

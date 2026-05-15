@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MMS PRO | Enterprise Dashboard</title>
+    
+    <!-- CSS Dependencies -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --primary-blue: #3b82f6;
+            --sidebar-width: 280px;
+            --body-bg: #f4f7fe;
+            --sidebar-dark: #111827;
+            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        body { 
+            font-family: 'Plus Jakarta Sans', sans-serif; 
+            background-color: var(--body-bg); 
+            color: #1f2937;
+            margin: 0;
+            overflow-x: hidden; 
+        }
+
+        /* --- SIDEBAR --- */
+        #sidebar {
+            width: var(--sidebar-width);
+            height: 100vh;
+            background: var(--sidebar-dark);
+            position: fixed;
+            left: 0;
+            top: 0;
+            z-index: 1050;
+            transition: var(--transition);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .sidebar-header { 
+            padding: 2rem 1.5rem; 
+            border-bottom: 1px solid rgba(255,255,255,0.05); 
+        }
+
+        .sidebar-label {
+            text-transform: uppercase;
+            color: #4b5563;
+            font-weight: 700;
+            font-size: 11px;
+            letter-spacing: 1.2px;
+            padding: 1.5rem 1.5rem 0.5rem;
+        }
+
+        .nav-link {
+            padding: 0.8rem 1.5rem;
+            margin: 0.2rem 1rem;
+            color: #9ca3af !important;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            transition: var(--transition);
+            font-weight: 500;
+        }
+
+        .nav-link i { width: 24px; font-size: 1.1rem; }
+        
+        .nav-link:hover { 
+            color: #fff !important; 
+            background: rgba(255,255,255,0.05); 
+        }
+
+        .nav-link.active { 
+            color: #fff !important; 
+            background: var(--primary-blue); 
+            box-shadow: 0 10px 15px -3px rgba(59, 130, 246, 0.3); 
+        }
+
+        /* --- CONTENT --- */
+        #content {
+            min-height: 100vh;
+            padding: 1.5rem;
+            margin-left: var(--sidebar-width);
+            transition: var(--transition);
+        }
+
+        .top-navbar {
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(12px);
+            padding: 0.75rem 1.5rem;
+            border-radius: 16px;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.03);
+            margin-bottom: 2rem;
+        }
+
+        /* --- MOBILE RESPONSIVENESS --- */
+        #sidebar-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 1040;
+            backdrop-filter: blur(4px);
+        }
+
+        @media (max-width: 992px) {
+            #sidebar { transform: translateX(-100%); }
+            #sidebar.active { transform: translateX(0); }
+            #content { margin-left: 0; }
+            #sidebar-overlay.active { display: block; }
+        }
+
+        .logout-btn {
+            margin-top: auto;
+            margin-bottom: 1.5rem;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="sidebar-overlay"></div>
+
+    <!-- SIDEBAR -->
+    <nav id="sidebar">
+        <div class="sidebar-header d-flex align-items-center justify-content-between">
+            <div class="d-flex align-items-center">
+                <div class="bg-primary rounded-3 p-2 me-2">
+                    <i class="fas fa-cube text-white"></i>
+                </div>
+                <div>
+                    <h5 class="fw-bold mb-0 text-white">MMS<span class="text-primary">PRO</span></h5>
+                    <p class="text-muted small mb-0" style="font-size: 10px;">ENTERPRISE EDITION</p>
+                </div>
+            </div>
+            <button class="btn btn-sm text-white d-lg-none" id="closeSidebar">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+
+        <div class="overflow-y-auto">
+            <!-- GROUP 1: CORE -->
+            <p class="sidebar-label">Main Menu</p>
+            <ul class="nav flex-column">
+                <li class="nav-item">
+                    <a href="{% url 'Admin' %}" class="nav-link active">
+                        <i class="fas fa-chart-pie me-3"></i> Dashboard
+                    </a>
+                </li>
+            </ul>
+
+            <!-- GROUP 2: OPERATIONS -->
+            <p class="sidebar-label">Data Management</p>
+            <ul class="nav flex-column">
+                <li class="nav-item">
+                    <a href="{% url 'farmer_listy' %}" class="nav-link">
+                        <i class="fas fa-users-viewfinder me-3"></i> Farmer Registry
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="{% url 'Admin_record_maize_intake' %}" class="nav-link">
+                        <i class="fas fa-wheat-awn me-3"></i> Maize Intake
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="{% url 'collect_milk' %}" class="nav-link">
+                        <i class="fas fa-cow me-3"></i> Milk Collection
+                    </a>
+                </li>
+            </ul>
+
+            <!-- GROUP 3: REPORTS (Well Classified) -->
+            <p class="sidebar-label">Reporting & Analytics</p>
+            <ul class="nav flex-column">
+                <li class="nav-item">
+                    <a href="{% url 'sales_report' %}" class="nav-link">
+                        <i class="fas fa-chart-line me-3"></i> Sales Analysis
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="{% url 'business_report' %}" class="nav-link">
+                        <i class="fas fa-file-invoice-dollar me-3"></i> Business Summary
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="{% url 'report' %}" class="nav-link">
+                        <i class="fas fa-boxes-stacked me-3"></i> Inventory Logs
+                    </a>
+                </li>
+            </ul>
+
+            <!-- GROUP 4: SYSTEM -->
+            <p class="sidebar-label">Administration</p>
+            <ul class="nav flex-column">
+                <li class="nav-item">
+                    <a href="{% url 'users_system' %}" class="nav-link">
+                        <i class="fas fa-users-cog me-3"></i> User Access
+                    </a>
+                </li>
+            </ul>
+        </div>
+
+        <div class="logout-btn">
+            <a href="{% url 'Logout'%}" class="nav-link text-danger bg-danger-subtle border-0">
+                <i class="fas fa-arrow-right-from-bracket me-3"></i> Logout
+            </a>
+        </div>
+    </nav>
+
+    <!-- MAIN CONTENT -->
+    <div id="content">
+        <!-- TOP NAVBAR -->
+        <nav class="top-navbar d-flex justify-content-between align-items-center">
+            <div class="d-flex align-items-center">
+                <button class="btn btn-light d-lg-none me-3" id="sidebarToggle">
+                    <i class="fas fa-bars"></i>
+                </button>
+                <h5 class="fw-bold mb-0">Overview</h5>
+            </div>
+            
+            <div class="d-flex align-items-center gap-3">
+                <div class="text-end d-none d-sm-block">
+                    <p class="mb-0 fw-bold small">{{user.las_tname}} {{user.first_name}}</p>
+                    <p class="mb-0 text-muted" style="font-size: 11px;">System Administrator</p>
+                </div>
+                <img src="https://ui-avatars.com/api/?name=KM&background=3b82f6&color=fff" class="rounded-pill shadow-sm" width="40" alt="Profile">
+            </div>
+        </nav>
+
+        <div class="container-fluid">
+            {% block content %}
+            <!-- This is where your page-specific data goes -->
+            <div class="alert alert-info">
+                Ready for content injection. Sidebar classification completed.
+            </div>
+            {% endblock %}
+        </div>
+    </div>
+
+    <!-- SCRIPTS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.getElementById('sidebar-overlay');
+            const toggleBtn = document.getElementById('sidebarToggle');
+            const closeBtn = document.getElementById('closeSidebar');
+
+            function toggleSidebar() {
+                sidebar.classList.toggle('active');
+                overlay.classList.toggle('active');
+            }
+
+            // Mobile Open/Close
+            if(toggleBtn) toggleBtn.addEventListener('click', toggleSidebar);
+            if(closeBtn) closeBtn.addEventListener('click', toggleSidebar);
+            if(overlay) overlay.addEventListener('click', toggleSidebar);
+
+            // Auto-Highlight Active Link based on URL
+            const currentUrl = window.location.href;
+            const navLinks = document.querySelectorAll('.nav-link');
+            
+            navLinks.forEach(link => {
+                if (link.href === currentUrl) {
+                    navLinks.forEach(l => l.classList.remove('active'));
+                    link.classList.add('active');
+                }
+            });
+
+            // Accessibility: Close sidebar on Escape key
+            document.addEventListener('keydown', (e) => {
+                if (e.key === "Escape" && sidebar.classList.contains('active')) {
+                    toggleSidebar();
+                }
+            });
+        });
+    </script>
+</body>
+</html>

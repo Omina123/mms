@@ -1,0 +1,28 @@
+<!-- modals/payout_modal.html -->
+<div class="modal fade" id="payoutModal" tabindex="-1" aria-labelledby="payoutModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title" id="payoutModalLabel">
+                    <i class="fas fa-money-bill-wave me-2"></i>Process Payout
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="payoutForm">
+                    <div class="mb-3">
+                        <label class="form-label text-muted small uppercase fw-bold">Farmer Name</label>
+                        <input type="text" class="form-control bg-light" id="modalFarmerName" readonly>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label text-muted small uppercase fw-bold">Amount to Pay (KES)</label>
+                        <input type="number" class="form-control form-control-lg" placeholder="0.00" required>
+                    </div>
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-success py-2 fw-bold">Confirm Payment</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>

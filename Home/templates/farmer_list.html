@@ -1,0 +1,92 @@
+{% extends 'base_admin.html' %}
+
+{% block content %}
+<div class="container-fluid py-5">
+    <div class="d-flex justify-content-between align-items-center mb-4 px-4">
+        <div>
+            <h2 class="fw-bold mb-0">Farmer Registry</h2>
+            <p class="text-muted">Manage suppliers and their associated stock/finances</p>
+        </div>
+        <a href="{% url 'add_farmers' %}" class="btn btn-primary rounded-pill px-4 shadow-sm">
+            <i class="fas fa-plus me-2"></i> Register New Farmer
+        </a>
+    </div>
+
+    <div class="glass-card shadow-lg border-0 overflow-hidden" style="border-radius: 20px;">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="bg-light">
+                    <tr class="text-uppercase small fw-bold text-secondary">
+                        <th class="ps-4">Farmer ID & Name</th>
+                        <th>Phone & Location</th>
+                        <th>Milling Bal (Maize)</th>
+                        <th>Milking Bal (Milk)</th>
+                        <th>Joined</th>
+                        <th class="text-center">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for f in farmers %}
+                    <tr>
+                        <td class="ps-4">
+                            <div class="d-flex align-items-center">
+                                <div class="avatar-sm bg-primary-soft text-primary rounded-circle me-3 d-flex align-items-center justify-content-center" style="width: 40px; height: 40px; background: rgba(13, 110, 253, 0.1);">
+                                    <i class="fas fa-user"></i>
+                                </div>
+                                <div>
+                                    <div class="fw-bold text-dark">{{ f.name }}</div>
+                                    <div class="text-muted extra-small">{{ f.farmer_id }}</div>
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            <div class="small"><i class="fas fa-phone-alt me-1 text-muted"></i> {{ f.phone_number }}</div>
+                            <div class="text-muted small"><i class="fas fa-map-marker-alt me-1"></i> {{ f.location|default:"N/A" }}</div>
+                        </td>
+                        <td>
+                            <span class="badge bg-success-soft text-success rounded-pill px-3">
+                                KES {{ f.milling_balance }}
+                            </span>
+                        </td>
+                        <td>
+                            <span class="badge bg-info-soft text-info rounded-pill px-3">
+                                KES {{ f.milking_balance }}
+                            </span>
+                        </td>
+                        <td class="text-muted small">
+                            {{ f.joined_date|date:"d M Y" }}
+                        </td>
+                        <td class="text-center">
+                            <a href="{% url 'manage_farmer_full' f.pk %}" class="btn btn-sm btn-white border shadow-sm rounded-pill px-3">
+                                <i class="fas fa-edit me-1 text-primary"></i> Manage
+                            </a>
+                            <a href="{% url 'full_farmer_report' f.farmer_id %}" class="btn btn-sm btn-white border shadow-sm rounded-pill px-3">
+                                <i class="fas fa-file-alt me-1 text-primary"></i> Report
+                            </a>
+                            <a href="{% url 'pay_farmer' f.pk %}" class="btn btn-sm btn-primary shadow-sm rounded-pill px-3">
+                                <i class="fas fa-hand-holding-dollar me-1"></i> Pay
+                        
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="6" class="text-center py-5 text-muted">
+                            <i class="fas fa-users-slash fa-3x mb-3 d-block"></i>
+                            No farmers registered yet.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<style>
+    .bg-success-soft { background-color: rgba(25, 135, 84, 0.1); }
+    .bg-info-soft { background-color: rgba(13, 202, 240, 0.1); }
+    .extra-small { font-size: 0.75rem; }
+    .btn-white { background: #fff; transition: 0.2s; }
+    .btn-white:hover { background: #f8f9fa; transform: translateY(-2px); }
+</style>
+{% endblock %}

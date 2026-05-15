@@ -1,0 +1,300 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+
+    <head>
+        <meta charset="utf-8">
+        <title>MILK - Dairy Management System</title>
+        <meta content="width=device-width, initial-scale=1.0" name="viewport">
+        <meta content="" name="keywords">
+        <meta content="" name="description">
+
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&family=Edu+TAS+Beginner:wght@400..700&family=Jost:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet">
+
+        <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.15.4/css/all.css"/>
+        <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.4.1/font/bootstrap-icons.css" rel="stylesheet">
+
+        <link rel="stylesheet" href="{% static 'lib/animate/animate.min.css' %}"/>
+        <link href="{% static 'lib/owlcarousel/assets/owl.carousel.min.css' %}" rel="stylesheet">
+
+        <link href="{% static 'css/bootstrap.min.css' %}" rel="stylesheet">
+
+        <link href="{% static 'css/style.css' %}" rel="stylesheet">
+    </head>
+
+    <body>
+
+        <div id="spinner" class="show bg-white position-fixed translate-middle w-100 vh-100 top-50 start-50 d-flex align-items-center justify-content-center">
+            <div class="spinner-border text-primary" style="width: 3rem; height: 3rem;" role="status">
+                <span class="sr-only">Loading...</span>
+            </div>
+        </div>
+        <div class="container-fluid header-top">
+            <div class="container d-flex align-items-center">
+                <div class="d-flex align-items-center h-100">
+                    <a href="{% url 'home' %}" class="navbar-brand" style="height: 125px;">
+                        <h1 class="text-primary mb-0"><i class="fas fa-hand-holding-water"></i> MILK</h1>
+                    </a>
+                </div>
+                <div class="w-100 h-100">
+                    <div class="topbar px-0 py-2 d-none d-lg-block" style="height: 45px;">
+                        <div class="row gx-0 align-items-center">
+                            <div class="col-lg-8 text-center text-lg-center mb-lg-0">
+                                <div class="d-flex flex-wrap">
+                                    <div class="border-end border-primary pe-3">
+                                        <a href="#" class="text-muted small"><i class="fas fa-map-marker-alt text-primary me-2"></i>Eldoret, Kenya</a>
+                                    </div>
+                                    <div class="ps-3">
+                                        <a href="mailto:info@milk.com" class="text-muted small"><i class="fas fa-envelope text-primary me-2"></i>info@milk.com</a>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-lg-4 text-center text-lg-end">
+                                <div class="d-flex justify-content-end">
+                                    <div class="d-flex border-end border-primary pe-3">
+                                        <a class="btn p-0 text-primary me-3" href="#"><i class="fab fa-facebook-f"></i></a>
+                                        <a class="btn p-0 text-primary me-3" href="#"><i class="fab fa-twitter"></i></a>
+                                        <a class="btn p-0 text-primary me-3" href="#"><i class="fab fa-instagram"></i></a>
+                                        <a class="btn p-0 text-primary me-0" href="#"><i class="fab fa-linkedin-in"></i></a>
+                                    </div>
+                                    <div class="dropdown ms-3">
+                                        <a href="#" class="dropdown-toggle text-white" data-bs-toggle="dropdown"><small class="text-body"><i class="fas fa-globe-africa text-primary me-2"></i> English</small></a>
+                                        <div class="dropdown-menu">
+                                            <a href="#" class="dropdown-item">English</a>
+                                            <a href="#" class="dropdown-item">Swahili</a>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="nav-bar px-0 py-lg-0" style="height: 80px;">
+                        <nav class="navbar navbar-expand-lg navbar-light d-flex justify-content-lg-end">
+                            <a href="{% url 'home' %}" class="navbar-brand-2">
+                                <h1 class="text-primary mb-0"><i class="fas fa-hand-holding-water"></i> MILK</h1>
+                            </a>                              
+                            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse">
+                                <span class="fa fa-bars"></span>
+                            </button>
+                            <div class="collapse navbar-collapse" id="navbarCollapse">
+                                <div class="navbar-nav mx-0 mx-lg-auto bg-white">
+                                    <a href="{% url 'home' %}" class="nav-item nav-link">Home</a>
+                                    <a href="#" class="nav-item nav-link">About</a>
+                                    <a href="#" class="nav-item nav-link active">Service</a>
+                                    <div class="nav-item dropdown">
+                                        <a href="#" class="nav-link" data-bs-toggle="dropdown">
+                                            <span class="dropdown-toggle">Portals</span>
+                                        </a>
+                                        <div class="dropdown-menu">
+                                            <a href="#" class="dropdown-item">Farmer Dashboard</a>
+                                            <a href="#" class="dropdown-item">Treasurer Portal</a>
+                                            <a href="/admin" class="dropdown-item">Admin Login</a>
+                                        </div>
+                                    </div>
+                                    <a href="#" class="nav-item nav-link">Contact</a>
+                                    <div class="nav-btn ps-3">
+                                        <a href="/admin" class="btn btn-primary py-2 px-4 ms-0 ms-lg-3"> Management Portal</a>
+                                    </div>
+                                </div>
+                            </div>
+                        </nav>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="container-fluid bg-breadcrumb">
+            <div class="container text-center py-5" style="max-width: 900px;">
+                <h4 class="text-white display-4 mb-4 wow fadeInDown" data-wow-delay="0.1s">Our Services</h4>
+                <ol class="breadcrumb d-flex justify-content-center mb-0 wow fadeInDown" data-wow-delay="0.3s">
+                    <li class="breadcrumb-item"><a href="{% url 'home' %}">Home</a></li>
+                    <li class="breadcrumb-item"><a href="#">Management</a></li>
+                    <li class="breadcrumb-item active text-primary">Service</li>
+                </ol>     
+            </div>
+        </div>
+        <div class="container-fluid service py-5">
+            <div class="container py-5">
+                <div class="d-flex flex-column mx-auto text-center mb-5 wow fadeInUp" data-wow-delay="0.2s" style="max-width: 800px;">
+                    <h4 class="text-primary">Our Core Services</h4>
+                    <h1 class="display-4 mb-4">The Best Dairy Solutions For You</h1>
+                    <p class="mb-0">We provide a full-spectrum digital infrastructure for dairy cooperatives, ensuring transparent collection, accurate testing, and reliable financial management for every farmer.
+                    </p>
+                </div>
+                <div class="row g-5 align-items-center">
+                    <div class="col-lg-3 wow fadeInLeft" data-wow-delay="0.2s">
+                        <ul class="nav">
+                            <li class="nav-item me-lg-0 mb-4">
+                                <a class="py-3 px-5 active" data-bs-toggle="pill" href="#ServiceTab-1">
+                                    <span>Procurement</span>
+                                </a>
+                            </li>
+                            <li class="nav-item me-lg-0 mb-4">
+                                <a class="py-3 px-5" data-bs-toggle="pill" href="#ServiceTab-2">
+                                    <span>SACCO Ops</span>
+                                </a>
+                            </li>
+                            <li class="nav-item me-lg-0 mb-4 mb-lg-0">
+                                <a class="py-3 px-5" data-bs-toggle="pill" href="#ServiceTab-3">
+                                    <span>Logistics</span>
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
+                    <div class="col-lg-9 wow fadeInRight" data-wow-delay="0.3s">
+                        <div class="tab-content">
+                            <div id="ServiceTab-1" class="tab-pane fade show p-0 active">
+                                <div class="service-carousel owl-carousel">
+                                    <div class="service-item">
+                                        <img src="{% static 'img/commercial-1.jpg' %}" class="img-fluid w-100" alt="">
+                                        <div class="border border-top-0 p-4">
+                                            <h4 class="mb-3">Collection Tracking</h4>
+                                            <p class="mb-4">Real-time recording of morning and evening milk deliveries with automated weight integration.
+                                            </p>
+                                            <a class="btn btn-primary py-2 px-4" href="#">Read More</a>
+                                        </div>
+                                    </div>
+                                    <div class="service-item">
+                                        <img src="{% static 'img/commercial-2.jpg' %}" class="img-fluid w-100" alt="">
+                                        <div class="border border-top-0 p-4">
+                                            <h4 class="mb-3">Quality Analysis</h4>
+                                            <p class="mb-4">Integrated lab results tracking for SNF, Fat content, and immediate quality grading.
+                                            </p>
+                                            <a class="btn btn-primary py-2 px-4" href="#">Read More</a>
+                                        </div>
+                                    </div>
+                                    <div class="service-item">
+                                        <img src="{% static 'img/commercial-3.jpg' %}" class="img-fluid w-100" alt="">
+                                        <div class="border border-top-0 p-4">
+                                            <h4 class="mb-3">Member Portals</h4>
+                                            <p class="mb-4">Transparent dashboards for farmers to view their delivery history and projected earnings.
+                                            </p>
+                                            <a class="btn btn-primary py-2 px-4" href="#">Read More</a>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div id="ServiceTab-2" class="tab-pane fade show p-0">
+                                <div class="service-carousel owl-carousel">
+                                    <div class="service-item">
+                                        <img src="{% static 'img/residential-1.jpg' %}" class="img-fluid w-100" alt="">
+                                        <div class="border border-top-0 p-4">
+                                            <h4 class="mb-3">Savings & Shares</h4>
+                                            <p class="mb-4">Automated deductions and share capital growth based on milk delivery volumes.
+                                            </p>
+                                            <a class="btn btn-primary py-2 px-4" href="#">Read More</a>
+                                        </div>
+                                    </div>
+                                    <div class="service-item">
+                                        <img src="{% static 'img/residential-2.jpg' %}" class="img-fluid w-100" alt="">
+                                        <div class="border border-top-0 p-4">
+                                            <h4 class="mb-3">Loan Management</h4>
+                                            <p class="mb-4">Instant credit scoring and Christmas loan processing for cooperative members.
+                                            </p>
+                                            <a class="btn btn-primary py-2 px-4" href="#">Read More</a>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div id="ServiceTab-3" class="tab-pane fade show p-0">
+                                <div class="service-carousel owl-carousel">
+                                    <div class="service-item">
+                                        <img src="{% static 'img/industrial-1.jpg' %}" class="img-fluid w-100" alt="">
+                                        <div class="border border-top-0 p-4">
+                                            <h4 class="mb-3">Fleet Tracking</h4>
+                                            <p class="mb-4">Manage milk transporters and optimized route planning for fresh delivery.
+                                            </p>
+                                            <a class="btn btn-primary py-2 px-4" href="#">Read More</a>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="container-fluid footer bg-dark py-5 wow fadeIn" data-wow-delay="0.2s">
+            <div class="container py-5">
+                <div class="row g-5 mb-5 align-items-center">
+                    <div class="col-lg-7">
+                        <div class="position-relative mx-auto">
+                            <input class="form-control w-100 py-3 ps-4 pe-5" type="text" placeholder="Farmer Email for Updates">
+                            <button type="button" class="btn btn-primary position-absolute top-0 end-0 py-2 px-4 mt-2 me-2">Subscribe</button>
+                        </div>
+                    </div>
+                    <div class="col-lg-5">
+                        <div class="d-flex align-items-center justify-content-center justify-content-lg-end">
+                            <a class="btn btn-light btn-md-square me-3" href=""><i class="fab fa-facebook-f"></i></a>
+                            <a class="btn btn-light btn-md-square me-3" href=""><i class="fab fa-twitter"></i></a>
+                            <a class="btn btn-light btn-md-square me-3" href=""><i class="fab fa-instagram"></i></a>
+                            <a class="btn btn-light btn-md-square me-0" href=""><i class="fab fa-linkedin-in"></i></a>
+                        </div>
+                    </div>
+                </div>
+                <div class="row g-5">
+                    <div class="col-md-6 col-lg-6 col-xl-3">
+                        <div class="footer-item d-flex flex-column">
+                            <div class="footer-item">
+                                <h3 class="text-white mb-4"><i class="fas fa-hand-holding-water text-primary me-3"></i>MILK</h3>
+                                <p class="mb-3">Digitizing the dairy value chain to empower farmers and ensure quality production through advanced fintech and supply chain tools.</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6 col-lg-6 col-xl-3">
+                        <div class="footer-item d-flex flex-column">
+                            <h4 class="text-white mb-4">Quick Links</h4>
+                            <a href="#"> Home</a>
+                            <a href="#"> About us</a>
+                            <a href="#"> Service</a>
+                            <a href="#"> Farmer Portal</a>
+                            <a href="#"> Contact Us</a>
+                        </div>
+                    </div>
+                    <div class="col-md-6 col-lg-6 col-xl-3">
+                        <div class="footer-item d-flex flex-column">
+                            <h4 class="text-white mb-4">Management</h4>
+                            <a href="#"> Milk Collection</a>
+                            <a href="#"> SACCO Shares</a>
+                            <a href="#"> Loan Schedules</a>
+                            <a href="#"> Quality Reports</a>
+                            <a href="#"> Dividend Tracking</a>
+                        </div>
+                    </div>
+                    <div class="col-md-6 col-lg-6 col-xl-3">
+                        <div class="footer-item d-flex flex-column">
+                            <h4 class="text-white mb-4">Contact Info</h4>
+                            <a href="#"><i class="fa fa-map-marker-alt text-primary me-2"></i> Eldoret, Kenya</a>
+                            <a href="mailto:info@milk.com"><i class="fas fa-envelope text-primary me-2"></i> info@milk.com</a>
+                            <a href="tel:+254 700 000000"><i class="fas fa-phone text-primary me-2"></i> +254 700 000000</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="container-fluid copyright py-4">
+            <div class="container">
+                <div class="row g-4 align-items-center">
+                    <div class="col-md-6 text-center text-md-start mb-md-0">
+                        <span class="text-body"><a href="#" class="border-bottom text-white"><i class="fas fa-copyright text-light me-2"></i>MILK Management System</a>, All rights reserved.</span>
+                    </div>
+                    <div class="col-md-6 text-center text-md-end text-body">
+                        Designed for Dairy Excellence
+                    </div>
+                </div>
+            </div>
+        </div>
+        <a href="#" class="btn btn-primary btn-lg-square back-to-top"><i class="fa fa-arrow-up"></i></a>   
+
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.4/jquery.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0/dist/js/bootstrap.bundle.min.js"></script>
+        <script src="{% static 'lib/wow/wow.min.js' %}"></script>
+        <script src="{% static 'lib/easing/easing.min.js' %}"></script>
+        <script src="{% static 'lib/waypoints/waypoints.min.js' %}"></script>
+        <script src="{% static 'lib/owlcarousel/owl.carousel.min.js' %}"></script>
+
+        <script src="{% static 'js/main.js' %}"></script>
+    </body>
+
+</html>

@@ -1,0 +1,111 @@
+{% extends 'base.html' %}
+{% load humanize %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- Message Alerts -->
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} alert-dismissible fade show shadow-sm rounded-3" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        {% endfor %}
+    {% endif %}
+
+    <div class="row g-4">
+        <!-- New Sale Form -->
+        <div class="col-md-5">
+            <div class="card border-0 shadow-sm rounded-4">
+                <div class="card-body p-4">
+                    <h4 class="fw-bold text-success mb-4">
+                        <i class="fas fa-cash-register me-2"></i>New Sale
+                    </h4>
+                    
+                    <form method="POST" id="saleForm">
+                        {% csrf_token %}
+                        <div class="mb-3">
+                            <label class="form-label small fw-bold text-muted">Select Product</label>
+                            {{ form.product }}
+                        </div>
+                        
+                        <div class="row g-3 mb-4">
+                            <div class="col-6">
+                                <label class="form-label small fw-bold text-muted">Quantity</label>
+                                {{ form.quantity }}
+                            </div>
+                            <div class="col-6">
+                                <label class="form-label small fw-bold text-muted">Unit Price (KES)</label>
+                                {{ form.selling_price }}
+                            </div>
+                        </div>
+
+                        <button type="submit" id="submitBtn" class="btn btn-success btn-lg w-100 fw-bold py-3 shadow-sm">
+                            <span id="btnText">RECORD SALE</span>
+                            <span id="btnSpinner" class="spinner-border spinner-border-sm d-none" role="status"></span>
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Sales Log -->
+        <div class="col-md-7">
+            <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+                <div class="card-header bg-white py-3 border-bottom d-flex justify-content-between align-items-center">
+                    <h6 class="m-0 fw-bold"><i class="fas fa-history me-2 text-muted"></i>Recent Sales Log</h6>
+                    <span class="badge bg-light text-dark rounded-pill">Last 10 Transactions</span>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="bg-light small">
+                            <tr>
+                                <th class="ps-3">Time</th>
+                                <th>Product</th>
+                                <th>Qty</th>
+                                <th class="text-end pe-3">Total (KES)</th>
+                            </tr>
+                        </thead>
+                        <tbody style="font-size: 0.9rem;">
+                            {% for sale in recent_sales %}
+                            <tr>
+                                <td class="ps-3 text-muted small">{{ sale.sold_at|date:"H:i" }}</td>
+                                <td>
+                                    <span class="fw-bold text-dark">{{ sale.get_product_display }}</span>
+                                </td>
+                                <td>{{ sale.quantity|floatformat:2 }}</td>
+                                <td class="text-end pe-3 fw-bold text-success">
+                                    {{ sale.total_revenue|intcomma }}
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="4" class="text-center py-5">
+                                    <i class="fas fa-inbox fa-3x mb-3 text-light"></i>
+                                    <p class="text-muted">No sales recorded yet.</p>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Prevent Double Submissions Script -->
+<script>
+    const saleForm = document.getElementById('saleForm');
+    const submitBtn = document.getElementById('submitBtn');
+    const btnText = document.getElementById('btnText');
+    const btnSpinner = document.getElementById('btnSpinner');
+
+    saleForm.addEventListener('submit', function() {
+        // Disable button and show spinner
+        submitBtn.disabled = true;
+        btnText.innerText = "Processing...";
+        btnSpinner.classList.remove('d-none');
+    });
+</script>
+{% endblock %}

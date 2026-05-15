@@ -1,0 +1,57 @@
+{% load tz%}
+<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        @media print { @page { margin: 0; } body { margin: 0.5cm; } }
+        body { font-family: 'Courier New', Courier, monospace; width: 80mm; font-size: 12px; }
+        .text-center { text-align: center; }
+        .bold { font-weight: bold; }
+        .divider { border-top: 1px dashed #000; margin: 5px 0; }
+        table { width: 100%; border-collapse: collapse; }
+        .footer { margin-top: 20px; font-size: 10px; }
+    </style>
+</head>
+<body onload="window.print();">
+    <div class="text-center">
+        <h2 class="bold" style="margin-bottom: 2px;">ELDOPOLY RETAIL</h2>
+        <p style="margin: 0;">Eldoret Main Branch</p>
+        <p style="margin: 0;">Tel: +254 7XX XXX XXX</p>
+    </div>
+
+    <div class="divider"></div>
+    <p> Date#: {% timezone "Africa/Nairobi" %}{{ sale.sold_at|date:"d/m/Y H:i" }}{% endtimezone %}</p>
+    <p>Receipt #: {{ sale.id|stringformat:"05d" }}</p>
+    <p>Cashier: {{ user.username|title }}</p>
+    <div class="divider"></div>
+
+    <table>
+        <thead>
+            <tr>
+                <th align="left">ITEM</th>
+                <th align="center">QTY</th>
+                <th align="right">TOTAL</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>{{ sale.product }}</td>
+                <td align="center">{{ sale.quantity }}</td>
+                <td align="right">{{ sale.total_revenue }}</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <div class="divider"></div>
+    <p class="bold" style="font-size: 14px;">
+        TOTAL: <span style="float: right;">KES {{ sale.total_revenue }}</span>
+    </p>
+    <p>Payment: {{ sale.payment_method }}</p>
+    <div class="divider"></div>
+
+    <div class="text-center footer">
+        <p class="bold">THANK YOU FOR SHOPPING WITH US!</p>
+        <p>Goods once sold are not returnable.</p>
+    </div>
+</body>
+</html>

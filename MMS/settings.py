@@ -32,7 +32,7 @@ MPESA_CALLBACK_URL = 'https://your-domain.com/mpesa/callback/'
 SECRET_KEY = 'django-insecure-o9^w15653c9!2(^$l1crynd+1_z2e5yno=%_ku!^@gdee0!%ve'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = False
 
 # settings.py
 

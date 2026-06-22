@@ -113,17 +113,19 @@
             <h5 class="m-0 fw-bold">Milling Pro</h5>
         </div>
 
-        <nav>
-            <a href="{% url 'manager_dashboard' %}" class="side-link active"><i class="fas fa-chart-line"></i> Dashboard</a>
-            <a href="{% url 'add_farmers' %}" class="side-link"><i class="fas fa-user-plus"></i> Add Farmers</a>
-            <a href="{% url 'collect_milk' %}" class="side-link"><i class="fas fa-milk"></i> Collect Milk</a>
-            <a href="{% url 'record_maize_intake' %}" class="side-link"><i class="fas fa-truck-loading"></i> Record Intake(Maize)</a>
-            <a href="{% url 'process_milling_batch' %}" class="side-link"><i class="fas fa-box-open"></i> Milling Batches</a>
-            <a href="{% url 'record_sale' %}" class="side-link"><i class="fas fa-warehouse"></i> Inventory</a>
-            <a href="#" class="side-link"><i class="fas fa-store"></i> Shop Flow</a>
-            <hr class="my-4" style="opacity: 0.1;">
-            <a href="#" class="side-link text-danger"><i class="fas fa-power-off"></i> Logout</a>
-        </nav>
+       <nav>
+    <a href="{% url 'manager_dashboard' %}" class="side-link active"><i class="fas fa-chart-line"></i> Dashboard</a>
+    <a href="{% url 'add_farmers' %}" class="side-link"><i class="fas fa-user-plus"></i> Add Farmers</a>
+    <a href="{% url 'collect_milk' %}" class="side-link"><i class="fas fa-milk"></i> Collect Milk</a>
+    <a href="{% url 'record_maize_intake' %}" class="side-link"><i class="fas fa-truck-loading"></i> Record Intake(Maize)</a>
+    <a href="{% url 'process_milling_batch' %}" class="side-link"><i class="fas fa-box-open"></i> Milling Batches</a>
+    <a href="{% url 'record_sale' %}" class="side-link"><i class="fas fa-warehouse"></i> Inventory</a>
+    
+    <a href="{% url 'add_shop_item' %}" class="side-link"><i class="fas fa-boxes"></i> Shop Flow</a>
+    
+    <hr class="my-4" style="opacity: 0.1;">
+    <a href="#" class="side-link text-danger"><i class="fas fa-power-off"></i> Logout</a>
+</nav>
     </aside>
 
     <div class="main-wrapper">

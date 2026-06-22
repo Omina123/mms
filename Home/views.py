@@ -64,18 +64,39 @@ def Admin(request):
     return render(request, "admin.html", context)
 from django.shortcuts import render
 from .models import ProductSale, MaizeStore, ProductStock
+from django.shortcuts import render
+from django.db.models import Sum
+from django.utils.dateparse import parse_date
+import datetime
+from .models import ProductSale
 
 def sales_report(request):
-    """View to display the full history of sales and invoices"""
-    # Fetch all sales, newest first
+    """View to display filtered or full history of sales and invoices"""
+    # Fetch base queryset
     all_sales = ProductSale.objects.all().order_by('-sold_at')
     
-    # Optional: Calculate totals for the report header
-    total_revenue = sum(sale.total_revenue for sale in all_sales)
+    # Get date filters from request GET parameters
+    start_date_str = request.GET.get('start_date')
+    end_date_str = request.GET.get('end_date')
+    
+    start_date = parse_date(start_date_str) if start_date_str else None
+    end_date = parse_date(end_date_str) if end_date_str else None
+
+    # Apply date range filtering if both limits are present
+    if start_date and end_date:
+        # Make the end_date inclusive of the entire day (up to 23:59:59)
+        end_datetime = datetime.datetime.combine(end_date, datetime.time.max)
+        all_sales = all_sales.filter(sold_at__range=(start_date, end_datetime))
+        
+    # Calculate totals for the report header dynamically based on the filtered results
+    # Using aggregate is much faster than running a Python loop over large databases
+    total_revenue = all_sales.aggregate(Sum('total_revenue'))['total_revenue__sum'] or 0
     
     context = {
         'all_sales': all_sales,
         'total_revenue': total_revenue,
+        'start_date': start_date_str,
+        'end_date': end_date_str,
     }
     return render(request, "sales_report.html", context)
 def manager_dashboard(request):
@@ -84,32 +105,33 @@ def manager_dashboard(request):
     raw_stock = store.total_sacks if store else 0
 
     # 2. Live Inventory (Actual stock available for sale right now)
-    # This pulls from the ProductStock model updated by MillingBatch.save()
     stock_qs = ProductStock.objects.all()
     stocks = {s.product_type: s.quantity for s in stock_qs}
 
-    # 3. Milk Data
-    total_milk = MilkCollection.objects.aggregate(total=Sum('litres'))['total'] or 0
+    # 3. Get milk stock
+    milk_stock = ProductStock.objects.filter(product_type='MILK').first()
 
     # 4. Recent Milling Batches (Production History)
     recent_batches = MillingBatch.objects.all().order_by('-date')[:5]
     
-    # 5. Recent Sales (To show on the dashboard sidebar)
+    # 5. Recent Sales - Get ONLY ONCE
     recent_sales = ProductSale.objects.all().order_by('-sold_at')[:10]
-    milk_stock = ProductStock.objects.filter(product_type='MILK').first()
+    
+    # 6. Recent Milk Collections - Get ONLY ONCE
+    recent_milk = MilkCollection.objects.all().order_by('-date')[:5]
 
     context = {
         'raw_stock': raw_stock,
         'live_unga_1kg': stocks.get('FLOUR1', 0), 
-        'live_unga_2kg': stocks.get('FLOUR2', 0), # Matches template logic
+        'live_unga_2kg': stocks.get('FLOUR2', 0),
         'live_germ': stocks.get('GERM', 0), 
         'live_bran': stocks.get('BRAN', 0), 
-        'total_milk': total_milk,
         'recent_batches': recent_batches,
-        'recent_sales': recent_sales,
+        'recent_sales': recent_sales,  # ONLY ONCE
         'live_milk': milk_stock.quantity if milk_stock else 0,
-        'recent_milk': MilkCollection.objects.all().order_by('-date')[:5],
-        'milk_form': MilkCollectionForm()# Added so the dashboard sidebar works
+        'recent_milk': recent_milk,  # ONLY ONCE
+        'milk_form': MilkCollectionForm(),
+        'shop_items_stock': ShopItemStock.objects.all().select_related('item').order_by('quantity'),
     }
     return render(request, 'manager_dashboard.html', context)
 def add_farmer(request):
@@ -259,29 +281,29 @@ import json
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 
-@csrf_exempt
-def mpesa_callback(request):
-    if request.method == 'POST':
-        data = json.loads(request.body)
-        result_code = data['Body']['stkCallback']['ResultCode']
+# @csrf_exempt
+# def mpesa_callback(request):
+#     if request.method == 'POST':
+#         data = json.loads(request.body)
+#         result_code = data['Body']['stkCallback']['ResultCode']
         
-        # ResultCode 0 means SUCCESS
-        if result_code == 0:
-            # Extract the Reference (e.g., S2916)
-            # Safaricom sends the reference in the 'AccountReference' or via custom logic
-            # For simplicity, we usually match via the CheckoutRequestID
-            checkout_id = data['Body']['stkCallback']['CheckoutRequestID']
+#         # ResultCode 0 means SUCCESS
+#         if result_code == 0:
+#             # Extract the Reference (e.g., S2916)
+#             # Safaricom sends the reference in the 'AccountReference' or via custom logic
+#             # For simplicity, we usually match via the CheckoutRequestID
+#             checkout_id = data['Body']['stkCallback']['CheckoutRequestID']
             
-            try:
-                # Find the sale and mark as COMPLETED
-                # (Assumes you saved the CheckoutRequestID in your ProductSale model)
-                sale = ProductSale.objects.get(mpesa_checkout_id=checkout_id)
-                sale.payment_status = 'COMPLETED'
-                sale.save()
-            except ProductSale.DoesNotExist:
-                pass
+#             try:
+#                 # Find the sale and mark as COMPLETED
+#                 # (Assumes you saved the CheckoutRequestID in your ProductSale model)
+#                 sale = ProductSale.objects.get(mpesa_checkout_id=checkout_id)
+#                 sale.payment_status = 'COMPLETED'
+#                 sale.save()
+#             except ProductSale.DoesNotExist:
+#                 pass
 
-        return JsonResponse({"ResultCode": 0, "ResultDesc": "Success"})
+#         return JsonResponse({"ResultCode": 0, "ResultDesc": "Success"})
 
 def print_receipt(request, sale_id):
     sale = get_object_or_404(ProductSale, id=sale_id)
@@ -290,91 +312,418 @@ from django.db import transaction
 from .mpesa_utilis import trigger_stk_push  # Ensure you import your utility function
 
 from datetime import datetime
+import json
+from decimal import Decimal, ROUND_HALF_UP
+from django.http import JsonResponse
+from django.db import transaction
+from django.contrib import messages
+from django.shortcuts import redirect
+import json
+from decimal import Decimal, ROUND_HALF_UP
+from datetime import datetime
 
+from django.db import transaction
+from django.db.models import Q, Sum
+from django.http import JsonResponse
+from django.shortcuts import render, redirect
+from django.contrib import messages
 
+from .models import ProductSale
+from .mpesa_utilis import trigger_stk_push   # your M‑Pesa utility
 
-def record_sale(request):
-    # Initialize form at the top or in the GET block to avoid UnboundLocalError
-    if request.method == "POST":
-        form = ProductSaleForm(request.POST)
-        if form.is_valid():
-            try:
-                with transaction.atomic():
-                    sale = form.save(commit=False)
-                    stock = ProductStock.objects.select_for_update().get(product_type=sale.product)
-
-                    if stock.quantity < sale.quantity:
-                        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-                            return JsonResponse({'status': 'error', 'message': 'Insufficient stock!'}, status=400)
-                        messages.error(request, f"Insufficient stock!")
-                    else:
-                        sale.total_revenue = sale.quantity * sale.selling_price
-                        payment_method = request.POST.get('payment_method')
-                        customer_phone = request.POST.get('customer_phone')
-
-                        if payment_method == 'MPESA':
-                            if not customer_phone:
-                                raise Exception("M-Pesa phone number is required.")
-                            
-                            stk_res = trigger_stk_push(customer_phone, sale.total_revenue, f"S{datetime.now().strftime('%M%S')}")
-                            
-                            if stk_res.get('ResponseCode') == '0':
-                                sale.payment_status = 'PENDING'
-                                sale.mpesa_checkout_id = stk_res.get('CheckoutRequestID')
-                                sale.save()
-                                stock.quantity -= sale.quantity
-                                stock.save()
-
-                                if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-                                    return JsonResponse({
-                                        'status': 'initiated',
-                                        'transaction_id': sale.id,
-                                        'message': 'STK Push Sent'
-                                    })
-                            else:
-                                raise Exception(f"M-Pesa Error: {stk_res.get('ResponseDescription')}")
-                        
-                        else:
-                            if payment_method == 'CREDIT':
-                                sale.payment_status = 'CREDIT'
-                            else:
-                                sale.payment_status = 'PAID'
-
-                            stock.quantity -= sale.quantity
-                            stock.save()
-                            sale.save()
-                            
-                            if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-                                return JsonResponse({'status': 'success', 'message': 'Sale Recorded'})
-                            
-                            messages.success(request, "Sale recorded successfully!")
-                            return redirect('record_sale')
-
-            except Exception as e:
-                if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-                    return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
-                messages.error(request, f"Transaction Failed: {e}")
-    else:
-        # CRITICAL FIX: This handles the GET request (page load)
-        form = ProductSaleForm()
-
-    # Dashboard Logic (Always executes regardless of POST or GET)
+# -------------------------------------------------------------------
+# Helper to render the sales dashboard (DRY)
+# -------------------------------------------------------------------
+def _render_sales_dashboard(request, form):
     recent_sales = ProductSale.objects.all().order_by('-sold_at')[:10]
-    
+
     paid_total = ProductSale.objects.filter(
         Q(payment_status='PAID') | Q(payment_status='COMPLETED')
     ).aggregate(Sum('total_revenue'))['total_revenue__sum'] or 0
-    
+
     credit_total = ProductSale.objects.filter(
         payment_status='CREDIT'
     ).aggregate(Sum('total_revenue'))['total_revenue__sum'] or 0
 
     return render(request, 'sales.html', {
-        'form': form, 
-        'paid_total': paid_total, 
-        'credit_total': credit_total, 
+        'form': form,
+        'paid_total': paid_total,
+        'credit_total': credit_total,
         'recent_sales': recent_sales,
     })
+
+# -------------------------------------------------------------------
+# Record Sale (handles multi‑item cart)
+# -------------------------------------------------------------------
+def record_sale(request):
+    if request.method == "POST":
+        # AJAX / JSON submission from the cart
+        if request.headers.get('Content-Type') == 'application/json' or \
+           request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            try:
+                data = json.loads(request.body)
+                cart_items = data.get('items', [])
+                payment_method = data.get('payment_method', 'CASH')
+                customer_phone = data.get('customer_phone')
+                customer_name = data.get('customer_name')
+
+                if not cart_items:
+                    return JsonResponse(
+                        {'status': 'error', 'message': 'Your cart is completely empty.'},
+                        status=400
+                    )
+
+                if payment_method == 'MPESA' and not customer_phone:
+                    return JsonResponse(
+                        {'status': 'error', 'message': 'Mobile phone number is required for M-Pesa STK push.'},
+                        status=400
+                    )
+
+                total_order_revenue = Decimal('0.00')
+                saved_sales = []
+
+                with transaction.atomic():
+                    for item in cart_items:
+                        shop_item_id = item.get('shop_item')
+
+                        # Create a new sale instance (no form used)
+                        sale = ProductSale()
+                        sale.product = item.get('product')
+                        if shop_item_id and sale.product == 'OTHER':
+                            sale.shop_item_id = int(shop_item_id)
+
+                        # Quantities and prices sent from frontend
+                        kg_quantity = Decimal(str(item.get('quantity', 0)))
+                        kg_price = Decimal(str(item.get('selling_price', 0)))
+
+                        # Compute line total
+                        sale.total_revenue = (kg_quantity * kg_price).quantize(
+                            Decimal('0.01'), rounding=ROUND_HALF_UP
+                        )
+                        total_order_revenue += sale.total_revenue
+
+                        sale.quantity = kg_quantity
+                        sale.selling_price = kg_price
+
+                        # Set payment status and method
+                        if payment_method == 'CREDIT':
+                            sale.payment_status = 'CREDIT'
+                            sale.payment_method = 'CREDIT'
+                            sale.customer_name = customer_name   # now saved!
+                        elif payment_method == 'MPESA':
+                            sale.payment_status = 'PENDING'
+                            sale.payment_method = 'MPESA'
+                        else:   # CASH
+                            sale.payment_status = 'PAID'
+                            sale.payment_method = 'CASH'
+
+                        sale.save()
+                        saved_sales.append(sale)
+
+                # -------------------------------------------------------------------
+                # If M‑Pesa, initiate STK push for the whole cart
+                # -------------------------------------------------------------------
+                if payment_method == 'MPESA' and saved_sales:
+                    reference_tag = f"SALE-{saved_sales[0].id}"
+                    mpesa_response = trigger_stk_push(
+                        phone=customer_phone,
+                        amount=total_order_revenue,
+                        reference=reference_tag
+                    )
+
+                    if mpesa_response.get('ResponseCode') == '0':
+                        checkout_id = mpesa_response.get('CheckoutRequestID')
+                        # Attach the same CheckoutRequestID to all items in this batch
+                        for sale in saved_sales:
+                            sale.mpesa_checkout_id = checkout_id
+                            sale.save()
+
+                        return JsonResponse({
+                            'status': 'initiated',
+                            'transaction_id': saved_sales[0].id,
+                            'message': 'STK Push prompted successfully!'
+                        })
+                    else:
+                        error_desc = mpesa_response.get('ResponseDescription', 'Gateway rejection')
+                        return JsonResponse(
+                            {'status': 'error', 'message': f"M-Pesa push failed: {error_desc}"},
+                            status=400
+                        )
+
+                # -------------------------------------------------------------------
+                # Cash or Credit – immediate success
+                # -------------------------------------------------------------------
+                return JsonResponse({
+                    'status': 'success',
+                    'message': f'{len(saved_sales)} items saved successfully.'
+                })
+
+            except Exception as e:
+                return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
+
+        # Non‑AJAX POST (shouldn't happen with our frontend)
+        else:
+            messages.error(request, "Invalid request format.")
+            return redirect('record_sale')
+
+    # GET request – show the dashboard with an empty form
+    else:
+        from .forms import ProductSaleForm   # import locally if needed
+        form = ProductSaleForm()
+
+    return _render_sales_dashboard(request, form)
+# views.py
+def get_product_price(request):
+    product_type = request.GET.get('product')
+    shop_item_id = request.GET.get('shop_item')
+    price = None
+
+    if product_type:
+        if product_type == 'OTHER' and shop_item_id:
+            try:
+                item = ShopItem.objects.get(id=shop_item_id)
+                price = item.default_selling_price
+            except ShopItem.DoesNotExist:
+                pass
+        else:
+            try:
+                stock = ProductStock.objects.get(product_type=product_type)
+                price = stock.selling_price
+            except ProductStock.DoesNotExist:
+                pass
+
+    if price is not None:
+        return JsonResponse({'price': str(price)})
+    return JsonResponse({'price': None})
+# views.py
+
+from django.shortcuts import render, redirect
+from django.contrib.admin.views.decorators import staff_member_required
+from django.contrib import messages
+from django.http import HttpResponseRedirect
+from decimal import Decimal
+from .models import ProductStock, ShopItem
+
+# @staff_member_required   # only staff (superadmin) can access
+def manage_prices(request):
+    # Handle POST: save prices
+    if request.method == 'POST':
+        # Update ProductStock prices
+        for key, value in request.POST.items():
+            if key.startswith('prod_'):
+                pk = key.split('_')[1]
+                try:
+                    stock = ProductStock.objects.get(pk=pk)
+                    stock.selling_price = Decimal(value)
+                    stock.save()
+                except (ProductStock.DoesNotExist, ValueError):
+                    pass
+            elif key.startswith('shop_'):
+                pk = key.split('_')[1]
+                try:
+                    item = ShopItem.objects.get(pk=pk)
+                    item.default_selling_price = Decimal(value)
+                    item.save()
+                except (ShopItem.DoesNotExist, ValueError):
+                    pass
+        messages.success(request, "All prices updated successfully.")
+        return redirect('manage_prices')
+
+    # GET: fetch all products
+    products = []
+
+    # Milled products
+    for stock in ProductStock.objects.all().order_by('product_type'):
+        products.append({
+            'type': 'Milled',
+            'name': stock.get_product_type_display(),
+            'price': stock.selling_price,
+            'field_id': f'prod_{stock.pk}',
+            'pk': stock.pk,
+            'model': 'ProductStock'
+        })
+
+    # General shop items
+    for item in ShopItem.objects.all().order_by('name'):
+        products.append({
+            'type': 'Shop Item',
+            'name': item.name,
+            'price': item.default_selling_price,
+            'field_id': f'shop_{item.pk}',
+            'pk': item.pk,
+            'model': 'ShopItem'
+        })
+
+    context = {
+        'products': products,
+        'title': 'Manage Selling Prices',
+    }
+    return render(request, 'manage_prices.html', context)
+# def record_sale(request):
+#     """View to handle multi-item cart sales, storing clean data, and handling bale conversions"""
+#     if request.method == "POST":
+#         # Check if the submission is incoming as JSON (from our new JS cart)
+#         if request.headers.get('Content-Type') == 'application/json' or request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+#             try:
+#                 data = json.loads(request.body)
+#                 cart_items = data.get('items', [])
+#                 payment_method = data.get('payment_method', 'CASH')
+#                 customer_phone = data.get('customer_phone')
+#                 customer_name = data.get('customer_name')
+
+#                 if not cart_items:
+#                     return JsonResponse({'status': 'error', 'message': 'Your cart is completely empty.'}, status=400)
+
+#                 if payment_method == 'MPESA' and not customer_phone:
+#                     return JsonResponse({'status': 'error', 'message': 'Mobile phone number is required for M-Pesa STK push.'}, status=400)
+
+#                 total_order_revenue = Decimal('0.00')
+#                 saved_sales = []
+
+#                 with transaction.atomic():
+#                     # 1. PROCESS EACH ITEM IN THE CART
+#                     for item in cart_items:
+#                         # Instantiate your model manually or via your model form equivalent
+#                         # For simplicity and consistency with your original architecture, we save directly to the model instance:
+#                         # assumed schema matching your form fields: product, shop_item_id, quantity, selling_price
+                        
+#                         # Note: If shop_item is present, it's passed as an ID from frontend
+#                         shop_item_id = item.get('shop_item')
+                        
+#                         # Create an unsaved instance of your Sale model
+#                         # Replacing form.save(commit=False) structure:
+#                         from .models import ProductSale # Adjust import based on your app name
+#                         sale = ProductSale()
+#                         sale.product = item.get('product')
+#                         if shop_item_id and sale.product == 'OTHER':
+#                             sale.shop_item_id = int(shop_item_id)
+                        
+#                         kg_quantity = Decimal(str(item.get('quantity', 0)))
+#                         kg_price = Decimal(str(item.get('selling_price', 0)))
+                        
+#                         # Compute row item revenue manually
+#                         sale.total_revenue = (kg_quantity * kg_price).quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
+#                         total_order_revenue += sale.total_revenue
+                        
+#                         sale.quantity = kg_quantity
+#                         sale.selling_price = kg_price
+
+#                         # Assign Customer names for Credit contexts
+#                         if payment_method == 'CREDIT':
+#                             sale.payment_status = 'CREDIT'
+#                             sale.payment_method = 'CREDIT'
+#                             # sale.customer_name = customer_name  # Adjust based on your model layout
+#                         elif payment_method == 'MPESA':
+#                             sale.payment_status = 'PENDING'
+#                             sale.payment_method = 'MPESA'
+#                         else:
+#                             sale.payment_status = 'PAID'
+#                             sale.payment_method = 'CASH'
+
+#                         sale.save()
+#                         saved_sales.append(sale)
+
+#                 # 2. SAFARICOM STK PUSH GATEWAY ROUTING
+#                 if payment_method == 'MPESA' and saved_sales:
+#                     # Anchor the transaction reference tracking to the first sale element ID or an aggregated tag
+#                     reference_tag = f"SALE-{saved_sales[0].id}" 
+#                     mpesa_response = trigger_stk_push(
+#                         phone=customer_phone, 
+#                         amount=total_order_revenue,  # Push total cart amount
+#                         reference=reference_tag
+#                     )
+                    
+#                     if mpesa_response.get('ResponseCode') == '0':
+#                         checkout_id = mpesa_response.get('CheckoutRequestID')
+#                         # Update all items under this specific batch push
+#                         for sale in saved_sales:
+#                             sale.mpesa_checkout_id = checkout_id
+#                             sale.save()
+                        
+#                         return JsonResponse({
+#                             'status': 'initiated',
+#                             'transaction_id': saved_sales[0].id, # Poll using primary sale asset
+#                             'message': 'STK Push prompted successfully!'
+#                         })
+#                     else:
+#                         error_desc = mpesa_response.get('ResponseDescription', 'Gateway rejection')
+#                         return JsonResponse({'status': 'error', 'message': f"M-Pesa push initialization failed: {error_desc}"}, status=400)
+
+#                 return JsonResponse({'status': 'success', 'message': f'{len(saved_sales)} items saved successfully.'})
+
+#             except Exception as e:
+#                 return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
+#         else:
+#             messages.error(request, "Invalid non-AJAX structural operational data mode.")
+#             return redirect('record_sale')
+
+#     else:
+#         form = ProductSaleForm()
+
+#     return _render_sales_dashboard(request, form)
+import json
+from django.http import JsonResponse, HttpResponse
+from django.views.decorators.csrf import csrf_exempt
+from .models import ProductSale
+
+@csrf_exempt
+def mpesa_callback(request):
+    """Callback listener that receives payment notices directly from Safaricom"""
+    if request.method == 'POST':
+        try:
+            mpesa_data = json.loads(request.body)
+            stk_callback = mpesa_data['Body']['stkCallback']
+            result_code = stk_callback['ResultCode']
+            checkout_request_id = stk_callback['CheckoutRequestID']
+            
+            # Find the specific row that contains this unique CheckoutID string
+            sale = ProductSale.objects.filter(mpesa_checkout_id=checkout_request_id).first()
+            
+            if sale:
+                if result_code == 0:
+                    # Payment Success: Transition the status to PAID
+                    sale.payment_status = 'PAID'
+                    
+                    # Extract receipt number safely if present
+                    callback_metadata = stk_callback.get('CallbackMetadata', {}).get('Item', [])
+                    for item in callback_metadata:
+                        if item['Name'] == 'MpesaReceiptNumber':
+                            # If you decide to track the specific receipt token inside your database
+                            pass 
+                    
+                    sale.save()
+                    print(f"Sale ID {sale.id} updated successfully to PAID via callback validation.")
+                else:
+                    # User cancelled, timed out, or entered an incorrect PIN
+                    sale.payment_status = 'PENDING'  # Or 'FAILED' depending on design choices
+                    sale.save()
+                    print(f"Transaction failed for Sale ID {sale.id} with code {result_code}")
+                    
+            return JsonResponse({"ResultCode": 0, "ResultDesc": "Success"})
+            
+        except Exception as e:
+            print(f"Callback processing fatal exception: {str(e)}")
+            return JsonResponse({"ResultCode": 1, "ResultDesc": "Internal Server Error"})
+            
+    return HttpResponse("Invalid request method", status=405)
+# def _render_sales_dashboard(request, form):
+#     """Helper function to keep dashboard aggregation metrics DRY"""
+#     recent_sales = ProductSale.objects.all().order_by('-sold_at')[:10]
+    
+#     paid_total = ProductSale.objects.filter(
+#         Q(payment_status='PAID') | Q(payment_status='COMPLETED')
+#     ).aggregate(Sum('total_revenue'))['total_revenue__sum'] or 0
+    
+#     credit_total = ProductSale.objects.filter(
+#         payment_status='CREDIT'
+#     ).aggregate(Sum('total_revenue'))['total_revenue__sum'] or 0
+
+#     return render(request, 'sales.html', {
+#         'form': form, 
+#         'paid_total': paid_total, 
+#         'credit_total': credit_total, 
+#         'recent_sales': recent_sales,
+#     })
 
 # Ensure you have a view for the JS to check status
 def check_mpesa_status(request, transaction_id):
@@ -383,41 +732,8 @@ def check_mpesa_status(request, transaction_id):
         return JsonResponse({'payment_status': sale.payment_status})
     except ProductSale.DoesNotExist:
         return JsonResponse({'payment_status': 'NOT_FOUND'}, status=404)
-@csrf_exempt
-def mpesa_callback(request):
-    data = json.loads(request.body)
-    stk_callback = data['Body']['stkCallback']
-    if stk_callback['ResultCode'] == 0:
-        checkout_id = stk_callback['CheckoutRequestID']
-        try:
-            sale = ProductSale.objects.get(mpesa_checkout_id=checkout_id)
-            sale.payment_status = 'COMPLETED' # This will move it to PAID total
-            sale.save()
-        except ProductSale.DoesNotExist:
-            pass
-    return JsonResponse({"ResultCode": 0, "ResultDesc": "Accepted"})
-# def Admin_collect_milk(request):
-    # if request.method=='POST':
-        # form = MilkCollectionForm(request.POST)
-        # if form.is_valid():
-            # try:
-                # with transaction.Atomic():
-                    # collection = form.save()
-                    # stock, _ = ProductStock.objects.get_or_create(product_type='MILK')
-                    # stock.quantity += collection.litres
-                    # stock.save()
-                    # farmer = collection.farmer
-                # clean_phone = str(farmer.phone_number).replace('+', '')
-                # msg=f"Hello {farmer.name}, collected {collection.litres}L at Ksh {collection.buying_price}/L. Total: Ksh {collection.total_cost}. Your milk balance is Ksh {farmer.milking_balance}"    
-                # send_infobip_sms(clean_phone, msg)
-                # messages.success(request, "Milk collection recorded and SMS sent!")
-                # return redirect('Admin')
-            # 
-            # except Exception as e:
-                # messages.error(request, f"Failed to record collection: {str(e)}")
-    # else:
-        # form = MilkCollectionForm()
-    # return render(re 
+
+
 def milk_margin(request):
     pass
 def Admin_collect_milk(request):
@@ -454,41 +770,91 @@ def Admin_collect_milk(request):
     return render(request, 'Admin_milk_collection.html', {'form': form})
             
                     
+# def collect_milk(request):
+#     if request.method == "POST":
+#         form = MilkCollectionForm(request.POST)
+#         if form.is_valid():
+#             try:
+#                 with transaction.atomic():
+#                     # 1. Save collection (Farmer balance updated in model save() logic)
+#                     collection = form.save()
+                    
+#                     # 2. Update Inventory Stock (The Shop Shelf)
+#                     stock, _ = ProductStock.objects.get_or_create(product_type='MILK')
+#                     stock.quantity += collection.litres
+#                     stock.save()
+
+#                     farmer = collection.farmer
+
+#                 # --- SMS SENDING ---
+#                 # Strip '+' for Infobip API
+#                 clean_phone = str(farmer.phone_number).replace('+', '')
+#                 msg = (f"Hello {farmer.name}, collected {collection.litres}L at Ksh {collection.buying_price}/L. "
+#                        f"Total: Ksh {collection.total_cost}. Your milk balance is Ksh {farmer.milking_balance}")
+                
+#                 send_infobip_sms(clean_phone, msg)
+
+#                 messages.success(request, "Milk collection recorded and SMS sent!")
+#                 return redirect('manager_dashboard') 
+            
+#             except Exception as e:
+#                 messages.error(request, f"Failed to record collection: {str(e)}")
+        
+#     else:
+#         form = MilkCollectionForm()
+        
+#     return render(request, 'milk_collection.html', {'form': form})
+from decimal import Decimal
+from django.db import transaction
+from django.contrib import messages
+from django.shortcuts import redirect, render
+
 def collect_milk(request):
     if request.method == "POST":
         form = MilkCollectionForm(request.POST)
+
         if form.is_valid():
             try:
                 with transaction.atomic():
-                    # 1. Save collection (Farmer balance updated in model save() logic)
+
+                    # 1. SAVE ONLY
                     collection = form.save()
-                    
-                    # 2. Update Inventory Stock (The Shop Shelf)
-                    stock, _ = ProductStock.objects.get_or_create(product_type='MILK')
-                    stock.quantity += collection.litres
+
+                    # 2. UPDATE STOCK (ONLY HERE)
+                    stock, _ = ProductStock.objects.select_for_update().get_or_create(
+                        product_type='MILK'
+                    )
+
+                    stock.quantity += Decimal(str(collection.litres))
                     stock.save()
 
+                    # 3. UPDATE FARMER BALANCE (ONLY HERE NOW)
                     farmer = collection.farmer
+                    farmer.milking_balance += Decimal(str(collection.total_cost))
+                    farmer.save()
 
-                # --- SMS SENDING ---
-                # Strip '+' for Infobip API
-                clean_phone = str(farmer.phone_number).replace('+', '')
-                msg = (f"Hello {farmer.name}, collected {collection.litres}L at Ksh {collection.buying_price}/L. "
-                       f"Total: Ksh {collection.total_cost}. Your milk balance is Ksh {farmer.milking_balance}")
-                
-                send_infobip_sms(clean_phone, msg)
+                    # 4. SMS
+                    clean_phone = str(farmer.phone_number).replace('+', '')
 
-                messages.success(request, "Milk collection recorded and SMS sent!")
-                return redirect('manager_dashboard') 
-            
+                    msg = (
+                        f"Hello {farmer.name}, "
+                        f"Collected {collection.litres}L. "
+                        f"Total Ksh {collection.total_cost}. "
+                        f"Balance Ksh {farmer.milking_balance}"
+                    )
+
+                    send_infobip_sms(clean_phone, msg)
+
+                    messages.success(request, "Milk collection recorded successfully!")
+                    return redirect('manager_dashboard')
+
             except Exception as e:
-                messages.error(request, f"Failed to record collection: {str(e)}")
-        
+                messages.error(request, f"Failed: {str(e)}")
+
     else:
         form = MilkCollectionForm()
-        
-    return render(request, 'milk_collection.html', {'form': form})
 
+    return render(request, 'milk_collection.html', {'form': form})
 def farmer_listy(request):
     # Fetch all farmers and their related counts/balances
     farmers = Farmer.objects.all().order_by('-joined_date')
@@ -924,3 +1290,140 @@ def report(request):
         'total_revenue': total_revenue,
     }
     return render(request, 'report.html', context)
+from django.shortcuts import render, redirect
+from django.contrib import messages
+from django.db import transaction
+from .forms import AddShopItemForm
+from .models import ShopItemStock, ShopItem
+
+def add_shop_item(request):
+    if request.method == "POST":
+        form = AddShopItemForm(request.POST)
+        if form.is_valid():
+            try:
+                with transaction.atomic():
+                    # 1. Save the basic catalog item details
+                    shop_item = form.save()
+                    
+                    # 2. Grab the stock values from the form's cleaned data
+                    qty = form.cleaned_data.get('initial_stock', 0.00)
+                    reorder = form.cleaned_data.get('reorder_level', 5.00)
+                    
+                    # 3. Create the linked stock row automatically
+                    ShopItemStock.objects.create(
+                        item=shop_item,
+                        quantity=qty,
+                        reorder_level=reorder
+                    )
+                    
+                    messages.success(request, f"Successfully added {shop_item.name} to inventory!")
+                    return redirect('add_shop_item') # Or change to your product list view
+                    
+            except Exception as e:
+                messages.error(request, f"Error saving item: {str(e)}")
+    else:
+        form = AddShopItemForm()
+        
+    # Fetch existing items to display them as a list on the same page
+    all_items = ShopItem.objects.all().select_related('stock').order_by('-created_at')
+    
+    return render(request, 'add_shop_item.html', {
+        'form': form,
+        'all_items': all_items
+    })
+from django.shortcuts import render
+from django.db.models import F, ExpressionWrapper, DecimalField
+from decimal import Decimal
+from .models import MilkCollection, MaizeIntake, ProductSale, MillingBatch
+from django.shortcuts import render
+from django.db.models import F, ExpressionWrapper, DecimalField
+from django.utils.dateparse import parse_date
+from decimal import Decimal
+import datetime
+from .models import MilkCollection, MaizeIntake, ProductSale, MillingBatch
+
+def business_margin_report(request):
+    # Get date filters from request GET parameters
+    start_date_str = request.GET.get('start_date')
+    end_date_str = request.GET.get('end_date')
+    
+    start_date = parse_date(start_date_str) if start_date_str else None
+    end_date = parse_date(end_date_str) if end_date_str else None
+
+    # Base Querysets
+    milk_records = MilkCollection.objects.all().select_related('farmer')
+    milling_batches = MillingBatch.objects.all().order_by('-date')
+    shop_sales = ProductSale.objects.filter(product='OTHER').select_related('shop_item')
+
+    # Apply date filters if provided
+    if start_date and end_date:
+        # Make the end_date inclusive of the entire day (up to 23:59:59)
+        end_datetime = datetime.datetime.combine(end_date, datetime.time.max)
+        
+        milk_records = milk_records.filter(date__range=(start_date, end_datetime))
+        milling_batches = milling_batches.filter(date__range=(start_date, end_datetime))
+        shop_sales = shop_sales.filter(sold_at__range=(start_date, end_datetime))
+
+    # ----------------------------------------------------
+    # 1. FARMER MILK REPORT PROCESSING
+    # ----------------------------------------------------
+    milk_records = milk_records.annotate(
+        unit_margin=ExpressionWrapper(F('selling_price') - F('buying_price'), output_field=DecimalField()),
+        total_margin=ExpressionWrapper((F('selling_price') - F('buying_price')) * F('litres'), output_field=DecimalField())
+    )
+
+    # ----------------------------------------------------
+    # 2. MAIZE MILLING MARGINS PROCESSING
+    # ----------------------------------------------------
+    price_flour1 = ProductSale.objects.filter(product='FLOUR1').order_by('-sold_at').values_list('selling_price', flat=True).first() or Decimal('0.00')
+    price_flour2 = ProductSale.objects.filter(product='FLOUR2').order_by('-sold_at').values_list('selling_price', flat=True).first() or Decimal('0.00')
+    price_germ = ProductSale.objects.filter(product='GERM').order_by('-sold_at').values_list('selling_price', flat=True).first() or Decimal('0.00')
+    price_bran = ProductSale.objects.filter(product='BRAN').order_by('-sold_at').values_list('selling_price', flat=True).first() or Decimal('0.00')
+
+    avg_buying_price_per_sack = MaizeIntake.objects.all().order_by('-date').values_list('price_per_sack', flat=True).first() or Decimal('0.00')
+
+    maize_milling_data = []
+    for batch in milling_batches:
+        if batch.sacks_pulled_from_store <= 0:
+            continue
+            
+        revenue_flour1 = batch.one_kg_flour_bales * price_flour1
+        revenue_flour2 = batch.two_kg_flour_bales * price_flour2
+        revenue_germ = batch.maize_germ_kg * price_germ
+        revenue_bran = batch.maize_bran_kg * price_bran
+        
+        total_batch_revenue = revenue_flour1 + revenue_flour2 + revenue_germ + revenue_bran
+        total_batch_cost = batch.sacks_pulled_from_store * avg_buying_price_per_sack
+        batch_margin = total_batch_revenue - total_batch_cost
+        
+        estimated_revenue_per_sack = total_batch_revenue / batch.sacks_pulled_from_store
+        margin_per_sack = estimated_revenue_per_sack - avg_buying_price_per_sack
+
+        maize_milling_data.append({
+            "batch_no": batch.batch_no,
+            "sacks_processed": batch.sacks_pulled_from_store,
+            "buying_price_per_sack": avg_buying_price_per_sack,
+            "estimated_yield_revenue_per_sack": estimated_revenue_per_sack,
+            "margin_per_sack": margin_per_sack,
+            "total_batch_margin": batch_margin,
+            "date_recorded": batch.date
+        })
+
+    # ----------------------------------------------------
+    # 3. GENERAL SHOP REPORT PROCESSING
+    # ----------------------------------------------------
+    shop_sales = shop_sales.annotate(
+        item_buying_price=F('shop_item__buying_price'),
+        unit_margin=ExpressionWrapper(F('selling_price') - F('shop_item__buying_price'), output_field=DecimalField()),
+        total_margin=ExpressionWrapper((F('selling_price') - F('shop_item__buying_price')) * F('quantity'), output_field=DecimalField())
+    )
+
+    context = {
+        "milk_collections": milk_records,
+        "maize_batches": maize_milling_data,
+        "shop_sales": shop_sales,
+        "start_date": start_date_str,
+        "end_date": end_date_str,
+    }
+    
+    return render(request, 'margin_report.html', context)

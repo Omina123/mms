@@ -157,45 +157,37 @@ class MillingBatch(models.Model):
 
         super().save(*args, **kwargs)
 
-
+import uuid
+from decimal import Decimal
+from django.db import models
+from django.utils import timezone
 
 class MilkCollection(models.Model):
     # Auto-generated unique number
     collection_no = models.CharField(max_length=20, unique=True, editable=False)
+
     farmer = models.ForeignKey('Farmer', on_delete=models.CASCADE, related_name='milk_collections')
     litres = models.DecimalField(max_digits=10, decimal_places=2)
-    buying_price = models.DecimalField(max_digits=10, decimal_places=2) 
+    buying_price = models.DecimalField(max_digits=10, decimal_places=2)
+    selling_price = models.DecimalField(max_digits=10, decimal_places=2, default=0.00, help_text="Selling price per litre")
+    # total_cost = models.DecimalField(max_digits=12, decimal_places=2, editable=False)
     total_cost = models.DecimalField(max_digits=12, decimal_places=2, editable=False)
+
     date = models.DateTimeField(default=timezone.now)
 
     def save(self, *args, **kwargs):
-        # 1. Generate unique collection number if it doesn't exist
+        # 1. Generate reference number once
         if not self.collection_no:
             self.collection_no = f"MLK-{uuid.uuid4().hex[:6].upper()}"
 
-        # 2. Calculate total cost using strict Decimal conversion
-        self.total_cost = Decimal(str(self.litres)) * Decimal(str(self.buying_price))
-        
-        # 3. Use an atomic transaction for data integrity
-        with transaction.atomic():
-            # A. Update Global Stock (Inventory)
-            # We use select_for_update() to lock the row and prevent math errors during simultaneous saves
-            from .models import ProductStock  # Ensure local import if needed
-            stock, _ = ProductStock.objects.select_for_update().get_or_create(product_type='MILK')
-            
-            # FORCE both values to Decimal to fix the "float vs decimal" error
-            stock.quantity = Decimal(str(stock.quantity)) + Decimal(str(self.litres))
-            stock.save()
+        # 2. Always compute total cost (NO SIDE EFFECTS)
+        self.total_cost = (
+            Decimal(str(self.litres)) *
+            Decimal(str(self.buying_price))
+        )
 
-            # B. Update Farmer's Balance (The Debt/Payout)
-            farmer_to_update = self.farmer
-            # Again, force conversion to Decimal to be safe
-            current_bal = Decimal(str(farmer_to_update.milking_balance))
-            farmer_to_update.milking_balance = current_bal + self.total_cost
-            farmer_to_update.save()
-
-            # 4. Finally, save the record itself
-            super().save(*args, **kwargs)
+        # 3. ONLY save record (NO STOCK, NO BALANCE LOGIC HERE)
+        super().save(*args, **kwargs)
 
     def __str__(self):
         return f"{self.collection_no} - {self.farmer.name} ({self.litres}L)"
@@ -221,10 +213,31 @@ class MpesaTransaction(models.Model):
     def __str__(self):
         return f"{self.transaction_no} - {self.amount}"
 
+# --- GENERAL SHOP ITEMS SECTION ---
 
+class ShopItem(models.Model):
+    """Catalog of general commodities (Sugar, Rice, Cooking oil, etc.)"""
+    name = models.CharField(max_length=100, unique=True, help_text="e.g., Sugar (1kg), Rice (25kg)")
+    sku = models.CharField(max_length=50, unique=True, blank=True, null=True, help_text="Stock Keeping Unit / Barcode")
+    buying_price = models.DecimalField(max_digits=10, decimal_places=2, help_text="Wholesale buying price")
+    default_selling_price = models.DecimalField(max_digits=10, decimal_places=2, help_text="Standard retail price")
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return self.name
+
+
+class ShopItemStock(models.Model):
+    """Tracks physical inventory levels for general shop commodities"""
+    item = models.OneToOneField(ShopItem, on_delete=models.CASCADE, related_name='stock')
+    quantity = models.DecimalField(max_digits=10, decimal_places=2, default=0.00, help_text="Available items/kg in store")
+    reorder_level = models.DecimalField(max_digits=10, decimal_places=2, default=5.00, help_text="Alert when stock dips below this")
+    last_restocked = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"{self.item.name}: {self.quantity} available"
 from django.db import transaction, models
 from django.core.exceptions import ValidationError
-
 class ProductSale(models.Model):
     PRODUCT_CHOICES = [
         ('FLOUR1', 'Unga Bale 1 kg'),
@@ -232,24 +245,28 @@ class ProductSale(models.Model):
         ('GERM', 'Maize Germ'),
         ('BRAN', 'Maize Bran'),
         ('MILK', 'Fresh Milk'),
+        ('OTHER', 'General Shop Item'), # Added choice to route to general shop items
     ]
-    
-    # NEW STATUS FIELDS
+
     STATUS_CHOICES = [
         ('PAID', 'Paid / Cash'),
-        ('CREDIT', 'On Credit / Pending'),
+        ('CREDIT', 'On Credit'),
+        ('PENDING', 'Pending')
     ]
-    
+
     product = models.CharField(max_length=10, choices=PRODUCT_CHOICES)
+    
+    # NEW LINK: Optional relationship to a general shop item
+    shop_item = models.ForeignKey(ShopItem, on_delete=models.SET_NULL, null=True, blank=True, help_text="Fill this ONLY if product is 'General Shop Item'")
+    
     quantity = models.DecimalField(max_digits=10, decimal_places=2)
     selling_price = models.DecimalField(max_digits=10, decimal_places=2)
     total_revenue = models.DecimalField(max_digits=12, decimal_places=2, editable=False)
-    
-    # Add these two:
+
     payment_status = models.CharField(max_length=10, choices=STATUS_CHOICES, default='PAID')
     customer_name = models.CharField(max_length=100, blank=True, null=True, help_text="Who bought on credit?")
-    
     sold_at = models.DateTimeField(auto_now_add=True)
+    
     payment_method = models.CharField(
         max_length=10, 
         choices=[('CASH', 'Cash'), ('MPESA', 'M-Pesa'), ('CREDIT', 'Credit')], 
@@ -258,26 +275,43 @@ class ProductSale(models.Model):
     mpesa_record = models.OneToOneField(MpesaTransaction, on_delete=models.SET_NULL, null=True, blank=True)
     mpesa_checkout_id = models.CharField(max_length=100, null=True, blank=True)
 
+    def clean(self):
+        # Validation to ensure data consistency
+        if self.product == 'OTHER' and not self.shop_item:
+            raise ValidationError("You selected 'General Shop Item'. Please specify which item was sold in the 'shop_item' field.")
+        if self.product != 'OTHER' and self.shop_item:
+            raise ValidationError("You cannot pick a specific milling product and link a general shop item at the same time.")
+
     def save(self, *args, **kwargs):
-        self.total_revenue = self.quantity * self.selling_price
+        # 1. Run validation rules first
+        self.full_clean()
         
-        # Atomically deduct stock when a sale is made
+        # 2. Compute total cost
+        self.total_revenue = Decimal(str(self.quantity)) * Decimal(str(self.selling_price))
+        
+        # 3. Handle stock deductions atomically for new entries
         if not self.pk:
             with transaction.atomic():
-                stock = ProductStock.objects.select_for_update().get(product_type=self.product)
-                if stock.quantity < self.quantity:
-                    raise ValidationError(f"Insufficient {self.get_product_display()} stock!")
-                stock.quantity -= self.quantity
-                stock.save()
-        super().save(*args, **kwargs)
+                if self.product == 'OTHER':
+                    # Deduct from dynamic shop stock
+                    stock = ShopItemStock.objects.select_for_update().get(item=self.shop_item)
+                    if stock.quantity < self.quantity:
+                        raise ValidationError(f"Insufficient stock for {self.shop_item.name}! Available: {stock.quantity}")
+                    stock.quantity -= self.quantity
+                    stock.save()
+                else:
+                    # Deduct from traditional processed stock
+                    stock = ProductStock.objects.select_for_update().get(product_type=self.product)
+                    if stock.quantity < self.quantity:
+                        raise ValidationError(f"Insufficient {self.get_product_display()} stock!")
+                    stock.quantity -= self.quantity
+                    stock.save()
 
-
-
-    def save(self, *args, **kwargs):
-        self.total_revenue = self.quantity * self.selling_price
         super().save(*args, **kwargs)
 
     def __str__(self):
+        if self.product == 'OTHER' and self.shop_item:
+            return f"{self.shop_item.name} - {self.quantity} @ {self.sold_at.strftime('%H:%M')}"
         return f"{self.get_product_display()} - {self.quantity} @ {self.sold_at.strftime('%H:%M')}"
 
 from django.db import models, transaction
@@ -319,14 +353,16 @@ class ActivityLog(models.Model):
     content_object = GenericForeignKey('content_type', 'object_id')
 class ProductStock(models.Model):
     PRODUCT_CHOICES = [
-        ('FLOUR', 'Unga Bale'),
+        ('FLOUR1', 'Unga 1 kg Bale'),
+        ('FLOUR2', 'Unga 2 kg Bale'),
         ('GERM', 'Maize Germ'),
         ('BRAN', 'Maize Bran'),
         ('MILK', 'Fresh Milk'),
     ]
     product_type = models.CharField(max_length=10, choices=PRODUCT_CHOICES, unique=True)
     quantity = models.DecimalField(max_digits=12, decimal_places=2, default=0.00)
-
-    def __str__(self):
-        return f"{self.get_product_type_display()}: {self.quantity}"
+    selling_price = models.DecimalField(
+        max_digits=10, decimal_places=2, default=0.00,
+        help_text="Current selling price per unit"
+    )
 # 3. MPESA TRANSACTION TRACKER

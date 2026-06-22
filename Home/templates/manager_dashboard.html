@@ -8,21 +8,150 @@
             <h2 class="fw-800 m-0 text-dark">Mill Operations <span class="fs-6 text-muted fw-normal">| Live Hub</span></h2>
         </div>
         <div class="col-auto">
-            <button class="btn btn-primary fw-bold px-4 shadow-sm" data-bs-toggle="modal" data-bs-target="#quickSaleModal">
-                <i class="fas fa-plus me-2"></i>New Sale
-            </button>
+            <span class="badge bg-success fs-6 py-2 px-3 shadow-sm">
+                <i class="fas fa-clock me-2"></i>{% now "H:i:s" %}
+            </span>
         </div>
     </div>
 
+    <!-- INVENTORY CARDS SECTION - All cards from the context -->
     <div class="row g-3 mb-4">
-        {% include "inventory_cards.html" %}
+        <!-- Raw Maize Stock Card -->
+        <div class="col-xl-2 col-lg-3 col-md-4 col-sm-6">
+            <div class="inventory-card shadow-sm">
+                <div class="card-icon bg-warning bg-opacity-10">
+                    <i class="fas fa-corn text-warning"></i>
+                </div>
+                <div class="card-stats">
+                    <h3 class="mb-0 fw-bold stock-value">{{ raw_stock|default:0|intcomma }}</h3>
+                    <span class="text-muted small">Raw Maize (Sacks)</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-2 col-lg-3 col-md-4 col-sm-6">
+            <div class="inventory-card shadow-sm">
+                <div class="card-icon bg-info bg-opacity-10">
+                    <i class="fas fa-bread-slice text-info"></i>
+                </div>
+                <div class="card-stats">
+                    <h3 class="mb-0 fw-bold stock-value">{{ live_unga_1kg|default:0|floatformat:0|intcomma }}</h3>
+                    <span class="text-muted small d-block">Unga 1kg (Bales)</span>
+                    
+                    {% widthratio live_unga_1kg|default:0 1 24 as total_1kg_weight %}
+                    <small class="text-primary fw-semibold font-monospace">Total: {{ total_1kg_weight|intcomma }} KGs</small>
+                    
+                    {% if live_unga_1kg|default:0 < 20 %}
+                        <span class="badge bg-danger mt-1 low-stock-badge d-block">Low Stock!</span>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-2 col-lg-3 col-md-4 col-sm-6">
+            <div class="inventory-card shadow-sm">
+                <div class="card-icon bg-success bg-opacity-10">
+                    <i class="fas fa-bread-slice text-success"></i>
+                </div>
+                <div class="card-stats">
+                    <h3 class="mb-0 fw-bold stock-value">{{ live_unga_2kg|default:0|floatformat:0|intcomma }}</h3>
+                    <span class="text-muted small d-block">Unga 2kg (Bales)</span>
+                    
+                    {% widthratio live_unga_2kg|default:0 1 24 as total_2kg_weight %}
+                    <small class="text-success fw-semibold font-monospace">Total: {{ total_2kg_weight|intcomma }} KGs</small>
+                    
+                    {% if live_unga_2kg|default:0 < 15 %}
+                        <span class="badge bg-danger mt-1 low-stock-badge d-block">Low Stock!</span>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-2 col-lg-3 col-md-4 col-sm-6">
+            <div class="inventory-card shadow-sm">
+                <div class="card-icon bg-secondary bg-opacity-10">
+                    <i class="fas fa-seedling text-secondary"></i>
+                </div>
+                <div class="card-stats">
+                    <h3 class="mb-0 fw-bold stock-value">{{ live_germ|default:0|floatformat:0|intcomma }}</h3>
+                    <span class="text-muted small d-block">Maize Germ (KG)</span>
+                    
+                    {% widthratio live_germ|default:0 90 1 as total_germ_bags %}
+                    <small class="text-secondary fw-semibold font-monospace">~ {{ total_germ_bags|intcomma }} Bags (90kg)</small>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-2 col-lg-3 col-md-4 col-sm-6">
+            <div class="inventory-card shadow-sm">
+                <div class="card-icon bg-brown bg-opacity-10">
+                    <i class="fas fa-wheat-alt text-brown"></i>
+                </div>
+                <div class="card-stats">
+                    <h3 class="mb-0 fw-bold stock-value">{{ live_bran|default:0|floatformat:0|intcomma }}</h3>
+                    <span class="text-muted small d-block">Maize Bran (KG)</span>
+                    
+                    {% widthratio live_bran|default:0 90 1 as total_bran_bags %}
+                    <small class="text-muted fw-semibold font-monospace text-dark">~ {{ total_bran_bags|intcomma }} Bags (90kg)</small>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-2 col-lg-3 col-md-4 col-sm-6">
+            <div class="inventory-card shadow-sm">
+                <div class="card-icon bg-primary bg-opacity-10">
+                    <i class="fas fa-jug text-primary"></i>
+                </div>
+                <div class="card-stats">
+                    <h3 class="mb-0 fw-bold stock-value">{{ live_milk|default:0|floatformat:1|intcomma }}</h3>
+                    <span class="text-muted small d-block">Fresh Milk (Litres)</span>
+                    <small class="text-primary fw-semibold font-monospace">&nbsp;</small> {% if live_milk|default:0 < 30 %}
+                        <span class="badge bg-danger mt-1 low-stock-badge d-block">Low Stock!</span>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Total Milk Collected Card -->
+        {% comment %} <div class="col-xl-2 col-lg-3 col-md-4 col-sm-6">
+            <div class="inventory-card shadow-sm">
+                <div class="card-icon bg-teal bg-opacity-10">
+                    <i class="fas fa-chart-line text-teal"></i>
+                </div>
+                <div class="card-stats">
+                    <h3 class="mb-0 fw-bold stock-value">{{ total_milk|default:0|floatformat:1|intcomma }}</h3>
+                    <span class="text-muted small">Total Milk Collected (L)</span>
+                </div>
+            </div>
+        </div> {% endcomment %}
+
+        <!-- Shop Items Stock Card - Dynamic for ALL shop products (Rice, Sugar, Cooking Oil, etc.) -->
+        {% if shop_items_stock %}
+            {% for stock in shop_items_stock %}
+            <div class="col-xl-2 col-lg-3 col-md-4 col-sm-6">
+                <div class="inventory-card shadow-sm">
+                    <div class="card-icon" style="background: {{ stock.item.color_code|default:'#e9ecef' }}20;">
+                        <i class="{{ stock.item.icon_class|default:'fas fa-box' }}"></i>
+                    </div>
+                    <div class="card-stats">
+                        <h3 class="mb-0 fw-bold stock-value">{{ stock.quantity|floatformat:0|intcomma }}</h3>
+                        <span class="text-muted small">{{ stock.item.name|default:"Shop Item" }}</span>
+                        {% if stock.quantity <= stock.item.reorder_level %}
+                            <span class="badge bg-danger mt-1 low-stock-badge">Low Stock!</span>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        {% endif %}
     </div>
 
     <div class="row g-4">
-        <div class="col-lg-8">
+        <!-- Recent Production Table -->
+        <div class="col-lg-7">
             <div class="glass-card shadow-sm h-100">
                 <div class="p-3 border-bottom d-flex justify-content-between align-items-center">
-                    <h6 class="m-0 fw-bold">Recent Production</h6>
+                    <h6 class="m-0 fw-bold"><i class="fas fa-industry me-2"></i>Recent Production</h6>
                     <div class="position-relative w-25">
                         <i class="fas fa-search position-absolute top-50 start-0 translate-middle-y ms-2 text-muted small"></i>
                         <input type="text" id="batchSearch" class="form-control form-control-sm ps-4" placeholder="Search Batch ID...">
@@ -34,21 +163,23 @@
                             <tr class="text-muted small">
                                 <th>BATCH ID</th>
                                 <th>MAIZE IN</th>
-                                <th>UNGA OUT</th>
+                                <th>UNGA 1KG</th>
+                                <th>UNGA 2KG</th>
                                 <th>STATUS</th>
-                            </tr>
+                            <tr>
                         </thead>
                         <tbody>
                             {% for batch in recent_batches %}
                             <tr class="batch-row">
                                 <td class="fw-bold batch-id-cell">{{ batch.batch_no }}</td>
                                 <td>{{ batch.sacks_pulled_from_store }} Sacks</td>
-                                <td class="text-success fw-bold">{{ batch.flour_bales }} Bales</td>
+                                <td>{{ batch.one_kg_flour_bales|floatformat:0 }} Bales</td>
+                                <td>{{ batch.two_kg_flour_bales|floatformat:0 }} Bales</td>
                                 <td><span class="badge bg-soft-success text-success border border-success-subtle">Completed</span></td>
                             </tr>
                             {% empty %}
                             <tr>
-                                <td colspan="4" class="text-center py-4 text-muted">No recent batches found.</td>
+                                <td colspan="5" class="text-center py-4 text-muted">No recent batches found.</td>
                             </tr>
                             {% endfor %}
                         </tbody>
@@ -57,92 +188,169 @@
             </div>
         </div>
 
-        <div class="col-lg-4">
-            <div class="glass-card shadow-sm h-100">
-                <div class="p-3 border-bottom d-flex justify-content-between">
-                    <h6 class="m-0 fw-bold">Sales Feed</h6>
-                    <small class="text-success fw-bold"><i class="fas fa-circle animate-pulse me-1"></i>Active Now</small>
-                </div>
-                <div class="sales-feed p-0" id="salesFeed" style="max-height: 400px; overflow-y: auto;">
-                    {% for sale in recent_sales %}
-                    <div class="sale-item p-3 border-bottom d-flex justify-content-between align-items-center">
-                        <div>
-                            <span class="d-block fw-bold text-dark">{{ sale.get_product_display }}</span>
-                            <small class="text-muted">{{ sale.sold_at|timesince }} ago</small>
+        <!-- Right Side - Sales and Milk Collections -->
+        <div class="col-lg-5">
+            <div class="row g-4">
+                <!-- Sales Feed -->
+                <div class="col-12">
+                    <div class="glass-card shadow-sm">
+                        <div class="p-3 border-bottom d-flex justify-content-between">
+                            <h6 class="m-0 fw-bold"><i class="fas fa-shopping-cart me-2"></i>Sales Feed</h6>
+                            <small class="text-success fw-bold"><i class="fas fa-circle animate-pulse me-1"></i>Live</small>
                         </div>
-                        <div class="text-end">
-                            <span class="d-block text-danger small">-{{ sale.quantity|floatformat:0 }}</span>
-                            <span class="fw-bold">KES {{ sale.total_revenue|intcomma }}</span>
+                        <div class="sales-feed p-0" style="max-height: 280px; overflow-y: auto;">
+                            {% for sale in recent_sales %}
+                            <div class="sale-item p-3 border-bottom d-flex justify-content-between align-items-center">
+                                <div>
+                                    <span class="d-block fw-bold text-dark">{{ sale.get_product_display }}</span>
+                                    <small class="text-muted">{{ sale.sold_at|timesince }} ago</small>
+                                    {% if sale.customer_name %}
+                                        <small class="d-block text-muted">{{ sale.customer_name }}</small>
+                                    {% endif %}
+                                </div>
+                                <div class="text-end">
+                                    <span class="d-block text-danger small">-{{ sale.quantity|floatformat:0 }}</span>
+                                    <span class="fw-bold text-success">KES {{ sale.total_revenue|intcomma }}</span>
+                                </div>
+                            </div>
+                            {% empty %}
+                            <div class="p-3 text-center text-muted">No recent sales recorded.</div>
+                            {% endfor %}
                         </div>
                     </div>
-                    {% endfor %}
+                </div>
+
+                <!-- Recent Milk Collections -->
+                <div class="col-12">
+                    <div class="glass-card shadow-sm">
+                        <div class="p-3 border-bottom">
+                            <h6 class="m-0 fw-bold"><i class="fas fa-tint text-primary me-2"></i>Recent Milk Collections</h6>
+                        </div>
+                        <div style="max-height: 280px; overflow-y: auto;">
+                            {% for milk in recent_milk %}
+                            <div class="p-3 border-bottom d-flex justify-content-between align-items-center">
+                                <div>
+                                    <span class="fw-semibold">{{ milk.farmer.name }}</span>
+                                    <span class="text-muted d-block small">{{ milk.date|timesince }} ago</span>
+                                </div>
+                                <div class="text-end">
+                                    <span class="badge bg-primary-subtle text-primary fs-6">+{{ milk.litres|floatformat:1 }} L</span>
+                                    <span class="d-block small text-success mt-1">KES {{ milk.total_cost|intcomma }}</span>
+                                </div>
+                            </div>
+                            {% empty %}
+                            <div class="text-muted small text-center py-4">No recent milk collections.</div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Stock Summary Card -->
+                <div class="col-12">
+                    <div class="glass-card shadow-sm bg-gradient-success text-white" style="background: linear-gradient(135deg, #14452F 0%, #1a5c3e 100%);">
+                        <div class="p-3">
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <h6 class="m-0 fw-bold text-white"><i class="fas fa-chart-pie me-2"></i>Stock Summary</h6>
+                                <i class="fas fa-boxes fs-4"></i>
+                            </div>
+                            <div class="row g-2 text-center">
+                                <div class="col-6">
+                                    <div class="bg-white bg-opacity-15 rounded p-2">
+                                        <div class="small">Total Products</div>
+                                        <div class="fs-4 fw-bold">{{ shop_items_stock|length|add:6 }}</div>
+                                    </div>
+                                </div>
+                                <div class="col-6">
+                                    <div class="bg-white bg-opacity-15 rounded p-2">
+                                        <div class="small">Low Stock Items</div>
+                                        <div class="fs-4 fw-bold" id="lowStockCount">0</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 </div>
 
-<div class="modal fade" id="quickSaleModal" tabindex="-1">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content border-0 shadow">
-            <form method="POST" action="{% url 'record_sale' %}">
-                {% csrf_token %}
-                <div class="modal-header border-0 bg-light">
-                    <h5 class="modal-title fw-bold">Quick Record Sale</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body">
-                    {{ sale_form.as_p }}
-                </div>
-                <div class="modal-footer border-0">
-                    <button type="submit" class="btn btn-success w-100 fw-bold py-2">Confirm Sale</button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
-
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    
-    // 1. IMPROVED Search for Batch Number specifically
-    const searchInput = document.getElementById('batchSearch');
-    const rows = document.querySelectorAll('.batch-row');
-
-    searchInput.addEventListener('input', function(e) {
-        const term = e.target.value.toLowerCase().trim();
-        
-        rows.forEach(row => {
-            // Find the cell with the class 'batch-id-cell'
-            const batchId = row.querySelector('.batch-id-cell').textContent.toLowerCase();
-            
-            if (batchId.includes(term)) {
-                row.style.display = '';
-            } else {
-                row.style.display = 'none';
-            }
-        });
-    });
-
-    // 2. Low Stock Alerts
-    const ungaStock = parseFloat("{{ live_unga|default:0 }}");
-    if (ungaStock < 20) {
-        // You could replace this with a Bootstrap Toast
-        console.warn("Inventory Alert: Unga Bales are low!");
-    }
-
-    // 3. Highlight Animation for newest item
-    const firstSale = document.querySelector('.sale-item');
-    if (firstSale) {
-        firstSale.classList.add('new-entry-flash');
-    }
-});
-</script>
-
 <style>
-    .glass-card { background: white; border-radius: 12px; border: 1px solid rgba(0,0,0,0.08); overflow: hidden; }
-    .bg-soft-success { background-color: #e8f8f0; color: #10b981; }
-    .fw-800 { font-weight: 800; }
+    /* Compact Inventory Card Styling */
+    .inventory-card {
+        background: white;
+        border-radius: 16px;
+        padding: 12px 12px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        transition: all 0.2s ease;
+        border: 1px solid rgba(0,0,0,0.05);
+        cursor: pointer;
+    }
+    
+    .inventory-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px rgba(0,0,0,0.1) !important;
+    }
+    
+    .card-icon {
+        width: 48px;
+        height: 48px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 14px;
+        font-size: 1.6rem;
+    }
+    
+    .card-stats h3 {
+        font-size: 1.5rem;
+        line-height: 1.2;
+        margin-bottom: 4px;
+    }
+    
+    .card-stats span {
+        font-size: 0.7rem;
+        letter-spacing: 0.3px;
+    }
+    
+    .low-stock-badge {
+        font-size: 0.65rem;
+        padding: 2px 6px;
+        margin-top: 4px;
+        display: inline-block;
+    }
+    
+    .glass-card {
+        background: white;
+        border-radius: 20px;
+        border: 1px solid rgba(0,0,0,0.06);
+        overflow: hidden;
+    }
+    
+    .bg-soft-success {
+        background-color: #e8f8f0;
+        color: #10b981;
+    }
+    
+    .fw-800 {
+        font-weight: 800;
+    }
+    
+    /* Color utilities for icons */
+    .text-brown {
+        color: #8B5A2B;
+    }
+    .bg-brown {
+        background-color: #8B5A2B;
+    }
+    .text-teal {
+        color: #14b8a6;
+    }
+    .bg-teal {
+        background-color: #14b8a6;
+    }
     
     /* Animation for the "Active" dot */
     .animate-pulse {
@@ -150,21 +358,185 @@ document.addEventListener('DOMContentLoaded', function() {
         font-size: 8px;
         vertical-align: middle;
     }
-
+    
     @keyframes pulse {
         0% { opacity: 1; }
         50% { opacity: 0.3; }
         100% { opacity: 1; }
     }
     
-    /* Flash green for new sales */
-    .new-entry-flash { animation: flash-green 2s ease-out; }
+    /* Flash green for new entries */
+    .new-entry-flash { 
+        animation: flash-green 2s ease-out; 
+    }
+    
     @keyframes flash-green {
         0% { background-color: #f0fff4; }
         100% { background-color: transparent; }
     }
-
-    .sale-item:hover { background-color: #f8f9fa; }
-    .table thead th { letter-spacing: 0.05em; font-weight: 700; }
+    
+    .sale-item:hover { 
+        background-color: #f8f9fa; 
+        cursor: pointer;
+    }
+    
+    .table thead th { 
+        letter-spacing: 0.05em; 
+        font-weight: 700; 
+        font-size: 0.7rem;
+        text-transform: uppercase;
+    }
+    
+    /* Stock value pulse animation */
+    @keyframes stockPulse {
+        0% { transform: scale(1); }
+        50% { transform: scale(1.05); color: #10b981; }
+        100% { transform: scale(1); }
+    }
+    
+    .stock-updated {
+        animation: stockPulse 0.5s ease-out;
+        display: inline-block;
+    }
+    
+    /* Responsive adjustments */
+    @media (max-width: 768px) {
+        .inventory-card {
+            padding: 8px 10px;
+        }
+        .card-icon {
+            width: 40px;
+            height: 40px;
+            font-size: 1.2rem;
+        }
+        .card-stats h3 {
+            font-size: 1.2rem;
+        }
+    }
 </style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    
+    // 1. Search for Batch Number
+    const searchInput = document.getElementById('batchSearch');
+    const rows = document.querySelectorAll('.batch-row');
+    
+    if (searchInput) {
+        searchInput.addEventListener('input', function(e) {
+            const term = e.target.value.toLowerCase().trim();
+            
+            rows.forEach(row => {
+                const batchIdCell = row.querySelector('.batch-id-cell');
+                if (batchIdCell) {
+                    const batchId = batchIdCell.textContent.toLowerCase();
+                    if (batchId.includes(term)) {
+                        row.style.display = '';
+                    } else {
+                        row.style.display = 'none';
+                    }
+                }
+            });
+        });
+    }
+    
+    // 2. Count low stock items
+    function countLowStockItems() {
+        let lowStockCount = 0;
+        
+        // Check Unga 1kg
+        const unga1kg = parseFloat("{{ live_unga_1kg|default:0 }}");
+        if (unga1kg < 20 && unga1kg > 0) lowStockCount++;
+        
+        // Check Unga 2kg
+        const unga2kg = parseFloat("{{ live_unga_2kg|default:0 }}");
+        if (unga2kg < 15 && unga2kg > 0) lowStockCount++;
+        
+        // Check Milk
+        const milk = parseFloat("{{ live_milk|default:0 }}");
+        if (milk < 30 && milk > 0) lowStockCount++;
+        
+        // Check shop items
+        {% if shop_items_stock %}
+            {% for stock in shop_items_stock %}
+                const stockQty{{ forloop.counter }} = parseFloat("{{ stock.quantity|default:0 }}");
+                const reorderLevel{{ forloop.counter }} = parseFloat("{{ stock.item.reorder_level|default:0 }}");
+                if (stockQty{{ forloop.counter }} <= reorderLevel{{ forloop.counter }} && stockQty{{ forloop.counter }} > 0) {
+                    lowStockCount++;
+                }
+            {% endfor %}
+        {% endif %}
+        
+        const lowStockElement = document.getElementById('lowStockCount');
+        if (lowStockElement) {
+            lowStockElement.textContent = lowStockCount;
+            if (lowStockCount > 0) {
+                lowStockElement.style.color = '#ffcc00';
+            }
+        }
+    }
+    
+    countLowStockItems();
+    
+    // 3. Low Stock Alerts (Console warnings)
+    const unga1kg = parseFloat("{{ live_unga_1kg|default:0 }}");
+    const unga2kg = parseFloat("{{ live_unga_2kg|default:0 }}");
+    const milk = parseFloat("{{ live_milk|default:0 }}");
+    
+    if (unga1kg < 20 && unga1kg > 0) {
+        console.warn("⚠️ Low Stock Alert: Unga 1kg is below 20 bales (Current: " + unga1kg + ")");
+    }
+    if (unga2kg < 15 && unga2kg > 0) {
+        console.warn("⚠️ Low Stock Alert: Unga 2kg is below 15 bales (Current: " + unga2kg + ")");
+    }
+    if (milk < 30 && milk > 0) {
+        console.warn("⚠️ Low Stock Alert: Fresh milk is below 30 litres (Current: " + milk + ")");
+    }
+    
+    // 4. Highlight Animation for newest sale
+    const firstSale = document.querySelector('.sale-item');
+    if (firstSale) {
+        firstSale.classList.add('new-entry-flash');
+        setTimeout(() => {
+            firstSale.classList.remove('new-entry-flash');
+        }, 2000);
+    }
+    
+    // 5. Highlight Animation for newest milk collection
+    const firstMilk = document.querySelector('.border-bottom.d-flex.justify-content-between');
+    if (firstMilk && !firstMilk.classList.contains('sale-item')) {
+        firstMilk.classList.add('new-entry-flash');
+        setTimeout(() => {
+            firstMilk.classList.remove('new-entry-flash');
+        }, 2000);
+    }
+    
+    // 6. Auto-refresh every 60 seconds (optional)
+    let autoRefresh = false; // Set to true if you want auto-refresh
+    if (autoRefresh) {
+        setInterval(function() {
+            location.reload();
+        }, 60000);
+    }
+    
+    // 7. Click on stock card to show alert (for demo)
+    const stockCards = document.querySelectorAll('.inventory-card');
+    stockCards.forEach(card => {
+        card.addEventListener('click', function() {
+            const productName = this.querySelector('.card-stats span:first-child')?.innerText || 'Product';
+            const stockValue = this.querySelector('.stock-value')?.innerText || '0';
+            console.log(`📊 ${productName}: ${stockValue}`);
+            
+            // Add pulse animation
+            const stockValueEl = this.querySelector('.stock-value');
+            if (stockValueEl) {
+                stockValueEl.classList.add('stock-updated');
+                setTimeout(() => {
+                    stockValueEl.classList.remove('stock-updated');
+                }, 500);
+            }
+        });
+    });
+});
+</script>
 {% endblock %}

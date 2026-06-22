@@ -170,6 +170,16 @@
                         <i class="fas fa-cow me-3"></i> Milk Collection
                     </a>
                 </li>
+                     <li class="nav-item">
+                    <a href="{% url 'manage_prices' %}" class="nav-link">
+                        <i class="fas fa-cow me-3"></i> Manage Prices
+                    </a>
+                </li>
+                     <li class="nav-item">
+                    <a href="{% url 'payment_dashboard' %}" class="nav-link">
+                        <i class="fas fa-cow me-3"></i> Payment History
+                    </a>
+                </li>
             </ul>
 
             <!-- GROUP 3: REPORTS (Well Classified) -->
@@ -195,6 +205,10 @@
                         <i class="fas fa-boxes-stacked me-3"></i> Inventory Logs
                     </a>
                 </li>
+                <li class="nav-item">
+                    <a href="{% url 'business_margin_report' %}" class="nav-link">
+                        <i class="fas fa-coins me-3"></i> Profit Margins
+                    </a>
             </ul>
 
             <!-- GROUP 4: SYSTEM -->

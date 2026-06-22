@@ -7,111 +7,203 @@
         --eldo-navy: #1a237e; 
         --eldo-gold: #fbc02d; 
         --success-green: #10b981;
+        --safaricom-green: #4caf50;
     }
     
     body { background-color: #f8fafc; font-family: 'Inter', sans-serif; }
-
-    /* Cards & Layout */
     .glass-card { background: white; border-radius: 1.25rem; border: 1px solid #e2e8f0; box-shadow: 0 4px 12px rgba(0,0,0,0.03); overflow: hidden; height: 100%; }
-    .stat-card { border-left: 6px solid; transition: transform 0.2s; }
+    .stat-card { border-left: 6px solid; transition: transform 0.2s; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); }
     .stat-card:hover { transform: translateY(-3px); }
 
-    /* M-Pesa Loading Overlay */
+    /* PAYMENT BLUR OVERLAY LAYER */
     #loadingOverlay {
-        position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-        background: rgba(255, 255, 255, 0.98); z-index: 9999;
-        display: none; flex-direction: column; align-items: center; justify-content: center;
+        position: fixed; 
+        top: 0; 
+        left: 0; 
+        width: 100%; 
+        height: 100%;
+        background: rgba(15, 23, 42, 0.75); 
+        backdrop-filter: blur(8px); 
+        -webkit-backdrop-filter: blur(8px);
+        z-index: 9999;
+        display: none; 
+        flex-direction: column; 
+        align-items: center; 
+        justify-content: center;
+    }
+
+    .payment-modal-box {
+        background: white;
+        padding: 3rem 2rem;
+        border-radius: 1.5rem;
+        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+        max-width: 450px;
+        width: 90%;
         text-align: center;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+
+    .pulse-loader {
+        width: 80px;
+        height: 80px;
+        border-radius: 50%;
+        background: rgba(76, 175, 80, 0.1);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 1.5rem;
+        position: relative;
+        animation: pulseRing 2s infinite ease-in-out;
+    }
+
+    @keyframes pulseRing {
+        0% { box-shadow: 0 0 0 0 rgba(76, 175, 80, 0.4); }
+        70% { box-shadow: 0 0 0 20px rgba(76, 175, 80, 0); }
+        100% { box-shadow: 0 0 0 0 rgba(76, 175, 80, 0); }
     }
 
     .btn-eldo { background: var(--eldo-navy); color: white; border-radius: 12px; font-weight: 700; padding: 1rem; border: none; width: 100%; transition: 0.3s; }
-    .btn-eldo:hover { background: #0d1440; box-shadow: 0 8px 15px rgba(26, 35, 126, 0.2); }
+    .btn-eldo:hover:not(:disabled) { background: #0d1440; box-shadow: 0 8px 15px rgba(26, 35, 126, 0.2); }
+    .btn-eldo:disabled { background: #cbd5e1; color: #94a3b8; cursor: not-allowed; }
     
+    .btn-cart { background: #e2e8f0; color: #1e293b; border-radius: 12px; font-weight: 600; padding: 0.75rem; border: none; width: 100%; transition: 0.3s; }
+    .btn-cart:hover { background: #cbd5e1; }
     .form-label-custom { font-size: 0.75rem; font-weight: 800; color: #64748b; text-transform: uppercase; letter-spacing: 0.025em; margin-bottom: 0.5rem; display: block; }
 </style>
 
+<!-- Payment Process Glass Overlay -->
 <div id="loadingOverlay">
-    <div class="spinner-border text-primary mb-4" style="width: 3rem; height: 3rem;" role="status"></div>
-    <h2 class="fw-bold">Waiting for Payment...</h2>
-    <p class="text-muted fs-5 px-4">An STK push has been sent to the phone. Enter PIN to complete.</p>
-    <div id="pollingStatus" class="mt-3 badge bg-light text-primary border p-2 fs-6">Initializing Safaricom...</div>
+    <div class="payment-modal-box animate__animated animate__zoomIn">
+        <div class="pulse-loader">
+            <div class="spinner-border text-success" style="width: 2.5rem; height: 2.5rem; border-width: 0.25em;" role="status"></div>
+        </div>
+        <h3 class="fw-black text-dark mb-2">Waiting for Payment...</h3>
+        <p class="text-muted px-2 small mb-4">An STK push has been transmitted to your client's handset phone. Prompt them to input their <b>M-Pesa PIN</b> to clear this balance order loop.</p>
+        
+        <div class="d-flex align-items-center justify-content-center gap-2 bg-light p-2 rounded-3 border">
+            <span class="spinner-grow spinner-grow-sm text-success" role="status"></span>
+            <span id="pollingStatus" class="font-monospace text-success fw-bold small text-uppercase">Verifying Safaricom Node...</span>
+        </div>
+    </div>
 </div>
 
 <div class="container-fluid py-4">
-    <div class="row g-4">
-        <div class="col-xl-4">
+    <!-- SECTION 1: TOP ROW GENERAL SUMMARY METRICS -->
+    <div class="row g-3 mb-4">
+        <div class="col-md-6">
+            <div class="glass-card stat-card border-success p-4">
+                <small class="form-label-custom mb-1">Cash & M-Pesa Today</small>
+                <h2 class="fw-bold text-success mb-0">KES {{ paid_total|intcomma }}</h2>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="glass-card stat-card border-warning p-4">
+                <small class="form-label-custom mb-1">Total Unpaid Credit</small>
+                <h2 class="fw-bold text-warning-emphasis mb-0">KES {{ credit_total|intcomma }}</h2>
+            </div>
+        </div>
+    </div>
+
+    <!-- SECTION 2: POS MAIN SYSTEM OPERATIONAL AREA -->
+    <div class="row g-4 mb-4">
+        <!-- TOP LEFT COMPONENT: Product Input Configurations Form -->
+        <div class="col-xl-5 col-lg-6">
             <div class="glass-card p-4">
-                <div class="d-flex align-items-center mb-4">
-                    <div class="bg-primary-subtle p-3 rounded-3 me-3">
-                        <i class="fas fa-cash-register text-primary"></i>
+                <div class="d-flex align-items-center mb-3">
+                    <div class="bg-primary-subtle p-2 rounded-3 me-3">
+                        <i class="fas fa-plus text-primary"></i>
                     </div>
-                    <h5 class="fw-bold mb-0">New Transaction</h5>
+                    <h5 class="fw-bold mb-0">Select Item Details</h5>
                 </div>
 
-                <form method="POST" id="salesForm" action="{% url 'record_sale' %}">
+                <div class="mb-3">
+                    <label class="form-label-custom">Select Product Category</label>
+                    {{ form.product }}
+                </div>
+
+                <div id="shopItemField" class="mb-3 p-3 bg-light rounded-3 border" style="display:none;">
+                    <label class="form-label-custom text-dark">Select Shop Commodity</label>
+                    {{ form.shop_item }}
+                </div>
+
+                <div class="row g-3 mb-3">
+                    <div class="col-6">
+                        <label class="form-label-custom" id="qtyLabel">Quantity (KGs)</label>
+                        {{ form.quantity }}
+                        <small id="unitConversionHelper" class="text-primary fw-bold mt-1 d-block font-monospace" style="font-size: 0.72rem;"></small>
+                    </div>
+                    <div class="col-6">
+                        <label class="form-label-custom" id="priceLabel">Price per Unit (KES)</label>
+                        {{ form.selling_price }}
+                    </div>
+                </div>
+
+                <button type="button" class="btn-cart" id="addItemToCartBtn">
+                    ADD TO CART <i class="fas fa-shopping-basket ms-2"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- TOP RIGHT COMPONENT: Virtual Active Operations Basket Panel -->
+        <div class="col-xl-7 col-lg-6">
+            <div class="glass-card p-4">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h6 class="fw-bold mb-0 text-navy"><i class="fas fa-shopping-cart me-2"></i> Active Checkout Basket</h6>
+                    <span id="cartCountBadge" class="badge bg-danger rounded-circle">0</span>
+                </div>
+                
+                <div id="emptyCartMessage" class="text-center py-4 text-muted small">
+                    No items in basket yet. Configure choices on the left.
+                </div>
+
+                <div id="cartItemsContainer" class="mb-3" style="max-height: 180px; overflow-y: auto;"></div>
+
+                <hr>
+
+                <form id="globalCheckoutForm" action="{% url 'record_sale' %}">
                     {% csrf_token %}
-                    
-                    <div class="mb-3">
-                        <label class="form-label-custom">Select Product</label>
-                        {{ form.product }}
-                    </div>
-
-                    <div class="row g-3 mb-3">
-                        <div class="col-6">
-                            <label class="form-label-custom">Quantity</label>
-                            {{ form.quantity }}
+                    <div class="row g-3 align-items-end mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label-custom">Payment Method</label>
+                            <select name="payment_method" id="id_payment_method" class="form-select border-2 fw-bold py-2">
+                                <option value="CASH">💵 Cash Payment</option>
+                                <option value="MPESA">📱 M-Pesa (STK Push)</option>
+                                <option value="CREDIT">💳 Credit / Debt</option>
+                            </select>
                         </div>
-                        <div class="col-6">
-                            <label class="form-label-custom">Unit Price (KES)</label>
-                            {{ form.selling_price }}
+                        <div class="col-md-6">
+                            <div id="phoneField" style="display:none;">
+                                <label class="form-label-custom text-primary">M-Pesa Number</label>
+                                <input type="text" name="customer_phone" id="id_customer_phone" class="form-control" placeholder="2547XXXXXXXX">
+                            </div>
+
+                            <div id="creditField" style="display:none;">
+                                <label class="form-label-custom text-warning-emphasis">Customer / Debtor Name</label>
+                                <input type="text" name="customer_name" id="id_customer_name" class="form-control" placeholder="Debtor Name">
+                            </div>
                         </div>
                     </div>
 
-                    <div class="mb-3">
-                        <label class="form-label-custom">Payment Method</label>
-                        <select name="payment_method" id="id_payment_method" class="form-select border-2 fw-bold py-2">
-                            <option value="CASH">💵 Cash Payment</option>
-                            <option value="MPESA">📱 M-Pesa (STK Push)</option>
-                            <option value="CREDIT">💳 Credit / Debt</option>
-                        </select>
+                    <div class="d-flex justify-content-between align-items-center mb-3 bg-light p-2 rounded-3">
+                        <span class="small fw-bold text-muted ps-2">TOTAL BASKET AMOUNT:</span>
+                        <span class="fs-4 fw-black pe-2 text-dark font-monospace">KES <span id="cartTotalLabel">0.00</span></span>
                     </div>
 
-                    <div id="phoneField" class="mb-4 p-3 bg-primary-subtle rounded-3 border border-primary animate__animated animate__fadeIn" style="display:none;">
-                        <label class="form-label-custom text-primary">M-Pesa Number</label>
-                        <input type="text" name="customer_phone" id="id_customer_phone" class="form-control" placeholder="2547XXXXXXXX">
-                    </div>
-
-                    <div id="creditField" class="mb-4 p-3 bg-warning-subtle rounded-3 border border-warning animate__animated animate__fadeIn" style="display:none;">
-                        <label class="form-label-custom text-warning-emphasis">Customer / Debtor Name</label>
-                        <input type="text" name="customer_name" class="form-control" placeholder="Who is taking this on credit?">
-                    </div>
-
-                    <button type="submit" class="btn-eldo" id="mainSubmitBtn">
-                        COMPLETE SALE <i class="fas fa-check-circle ms-2"></i>
+                    <button type="submit" class="btn-eldo" id="mainSubmitBtn" disabled>
+                        <span>PROCESS BASKET CLEARANCE</span> <i class="fas fa-check-circle ms-2"></i>
                     </button>
                 </form>
             </div>
         </div>
+    </div>
 
-        <div class="col-xl-8">
-            <div class="row g-3 mb-4">
-                <div class="col-md-6">
-                    <div class="glass-card stat-card border-success p-4">
-                        <small class="form-label-custom">Cash & M-Pesa Today</small>
-                        <h2 class="fw-bold text-success mb-0">KES {{ paid_total|intcomma }}</h2>
-                    </div>
-                </div>
-                <div class="col-md-6">
-                    <div class="glass-card stat-card border-warning p-4">
-                        <small class="form-label-custom">Total Unpaid Credit</small>
-                        <h2 class="fw-bold text-warning-emphasis mb-0">KES {{ credit_total|intcomma }}</h2>
-                    </div>
-                </div>
-            </div>
-
+    <!-- SECTION 3: LOWER PAGE AREA GRID SECTION -->
+    <div class="row g-4">
+        <!-- BOTTOM LEFT ALIGNED COMPONENT: Recent Shift Transactions Dashboard Log -->
+        <div class="col-xl-7 col-lg-8">
             <div class="glass-card">
                 <div class="p-3 border-bottom d-flex justify-content-between align-items-center bg-light">
-                    <h6 class="mb-0 fw-bold">Recent Shift Transactions</h6>
+                    <h6 class="mb-0 fw-bold"><i class="fas fa-history text-muted me-2"></i> Recent Shift Transactions</h6>
                     <span class="badge bg-white text-dark border">Live Feed</span>
                 </div>
                 <div class="table-responsive">
@@ -128,23 +220,30 @@
                             {% for sale in recent_sales %}
                             <tr>
                                 <td class="ps-4">
-                                    <div class="fw-bold text-dark">{{ sale.get_product_display }}</div>
-                                    <small class="text-muted">{{ sale.sold_at|date:"H:i A" }} • {{ sale.quantity }} Units</small>
+                                    <div class="fw-bold text-dark">
+                                        {% if sale.product == 'OTHER' and sale.shop_item %}
+                                            {{ sale.shop_item.name }}
+                                        {% else %}
+                                            {{ sale.get_product_display }}
+                                        {% endif %}
+                                    </div>
+                                    <small class="text-muted">
+                                        {{ sale.sold_at|date:"H:i A" }} • 
+                                        {% if sale.product == 'FLOUR1' or sale.product == 'FLOUR2' %}
+                                            {{ sale.quantity|floatformat:0 }} KGs total
+                                        {% else %}
+                                            {{ sale.quantity }} Units
+                                        {% endif %}
+                                    </small>
                                 </td>
                                 <td class="fw-bold text-navy">KES {{ sale.total_revenue|intcomma }}</td>
                                 <td>
                                     {% if sale.payment_method == 'MPESA' %}
-                                        <span class="badge rounded-pill bg-primary-subtle text-primary border border-primary-subtle">
-                                            <i class="fas fa-mobile-alt me-1"></i> M-Pesa
-                                        </span>
+                                        <span class="badge rounded-pill bg-primary-subtle text-primary border border-primary-subtle">📱 M-Pesa</span>
                                     {% elif sale.payment_method == 'CREDIT' %}
-                                        <span class="badge rounded-pill bg-warning-subtle text-warning-emphasis border border-warning-subtle">
-                                            <i class="fas fa-user-clock me-1"></i> Credit
-                                        </span>
+                                        <span class="badge rounded-pill bg-warning-subtle text-warning-emphasis border border-warning-subtle">💳 Credit</span>
                                     {% else %}
-                                        <span class="badge rounded-pill bg-success-subtle text-success border border-success-subtle">
-                                            <i class="fas fa-money-bill-wave me-1"></i> Cash
-                                        </span>
+                                        <span class="badge rounded-pill bg-success-subtle text-success border border-success-subtle">💵 Cash</span>
                                     {% endif %}
                                 </td>
                                 <td class="text-end pe-4">
@@ -163,61 +262,298 @@
                 </div>
             </div>
         </div>
+        
+        <!-- Empty spacing filler layout to match sizing distribution neatly -->
+        <div class="col-xl-5 col-lg-4 d-none d-lg-block"></div>
     </div>
 </div>
 
 <script>
+    let cart = [];
+
+    const productSelect = document.getElementById('id_product');
+    const shopItemSelect = document.getElementById('id_shop_item');
+    const shopItemBox = document.getElementById('shopItemField');
     const methodSelect = document.getElementById('id_payment_method');
     const phoneBox = document.getElementById('phoneField');
     const creditBox = document.getElementById('creditField');
-    const salesForm = document.getElementById('salesForm');
     const overlay = document.getElementById('loadingOverlay');
+    
+    const quantityInput = document.getElementById('id_quantity');
+    const priceInput = document.getElementById('id_selling_price');
+    const conversionHelper = document.getElementById('unitConversionHelper');
+    const qtyLabel = document.getElementById('qtyLabel');
+    const priceLabel = document.getElementById('priceLabel');
 
-    // Toggle fields based on payment choice
+    const addItemBtn = document.getElementById('addItemToCartBtn');
+    const cartContainer = document.getElementById('cartItemsContainer');
+    const emptyCartMsg = document.getElementById('emptyCartMessage');
+    const cartCountBadge = document.getElementById('cartCountBadge');
+    const cartTotalLabel = document.getElementById('cartTotalLabel');
+    const mainSubmitBtn = document.getElementById('mainSubmitBtn');
+    const globalCheckoutForm = document.getElementById('globalCheckoutForm');
+
+    // ================================================================
+    // AUTO-POPULATE SELLING PRICE
+    // ================================================================
+    function updateSellingPrice() {
+        const productVal = productSelect.value;
+        const shopItemVal = shopItemSelect.value;
+
+        if (!productVal) {
+            priceInput.value = '';
+            return;
+        }
+
+        let url = `/api/get-product-price/?product=${encodeURIComponent(productVal)}`;
+        if (productVal === 'OTHER' && shopItemVal) {
+            url += `&shop_item=${encodeURIComponent(shopItemVal)}`;
+        }
+
+        fetch(url)
+            .then(response => response.json())
+            .then(data => {
+                if (data.price !== null && data.price !== undefined) {
+                    priceInput.value = data.price;
+                } else {
+                    priceInput.value = '';
+                    console.warn('No price found for product:', productVal);
+                }
+            })
+            .catch(err => {
+                console.error('Error fetching price:', err);
+                priceInput.value = '';
+            });
+    }
+
+    // ================================================================
+    // EXISTING FUNCTIONS (unchanged except we call updateSellingPrice)
+    // ================================================================
+    function updateLabelsAndConversions() {
+        const prod = productSelect.value;
+        const qtyVal = parseFloat(quantityInput.value) || 0;
+
+        if (prod === 'FLOUR1' || prod === 'FLOUR2') {
+            qtyLabel.innerText = "Quantity (KGs)";
+            priceLabel.innerText = "Price per KG (KES)";
+            if (qtyVal > 0) {
+                conversionHelper.innerText = `= ${(qtyVal / 24).toFixed(2)} Bales to deduct`;
+            } else {
+                conversionHelper.innerText = "";
+            }
+        } else {
+            qtyLabel.innerText = "Quantity";
+            priceLabel.innerText = "Unit Price (KES)";
+            conversionHelper.innerText = "";
+        }
+    }
+
+    function toggleShopItemField() {
+        if (productSelect && productSelect.value === 'OTHER') {
+            shopItemBox.style.display = 'block';
+        } else {
+            shopItemBox.style.display = 'none';
+        }
+        updateLabelsAndConversions();
+        // also fetch price after toggling
+        updateSellingPrice();
+    }
+
+    // ================================================================
+    // ATTACH EVENTS
+    // ================================================================
+    if (productSelect) {
+        productSelect.addEventListener('change', function() {
+            toggleShopItemField();    // updates labels and calls updateSellingPrice
+        });
+        quantityInput.addEventListener('input', updateLabelsAndConversions);
+        toggleShopItemField();        // initial call
+    }
+
+    shopItemSelect.addEventListener('change', function() {
+        updateSellingPrice();         // when shop item changes, fetch its price
+    });
+
     methodSelect.addEventListener('change', function() {
         phoneBox.style.display = (this.value === 'MPESA') ? 'block' : 'none';
         creditBox.style.display = (this.value === 'CREDIT') ? 'block' : 'none';
     });
 
-    // M-Pesa STK Push Logic
-    salesForm.addEventListener('submit', async function(e) {
-        if (methodSelect.value !== 'MPESA') return; // Submit normally for Cash/Credit
-
-        e.preventDefault();
-        const phone = document.getElementById('id_customer_phone').value;
-        if (!phone) { alert("Please enter the M-Pesa number"); return; }
-
-        overlay.style.display = 'flex';
-        const formData = new FormData(salesForm);
+    // ================================================================
+    // CART SYSTEM (unchanged)
+    // ================================================================
+    addItemBtn.addEventListener('click', function() {
+        const productVal = productSelect.value;
+        const productText = productSelect.options[productSelect.selectedIndex].text;
+        const qtyVal = parseFloat(quantityInput.value);
+        const priceVal = parseFloat(priceInput.value);
         
+        let shopItemId = null;
+        let itemLabelName = productText;
+
+        if (!productVal || isNaN(qtyVal) || qtyVal <= 0 || isNaN(priceVal) || priceVal <= 0) {
+            alert("Please provide a valid Product, Quantity, and Price details.");
+            return;
+        }
+
+        if (productVal === 'OTHER') {
+            if (!shopItemSelect.value) {
+                alert("Please pick a concrete Shop Commodity variant.");
+                return;
+            }
+            shopItemId = shopItemSelect.value;
+            itemLabelName = shopItemSelect.options[shopItemSelect.selectedIndex].text;
+        }
+
+        const subtotal = qtyVal * priceVal;
+        cart.push({
+            product: productVal,
+            shop_item: shopItemId,
+            name: itemLabelName,
+            quantity: qtyVal,
+            selling_price: priceVal,
+            subtotal: subtotal
+        });
+
+        quantityInput.value = "";
+        priceInput.value = "";
+        conversionHelper.innerText = "";
+
+        renderCart();
+    });
+
+    function renderCart() {
+        cartContainer.innerHTML = "";
+        if (cart.length === 0) {
+            emptyCartMsg.style.display = 'block';
+            mainSubmitBtn.disabled = true;
+            cartCountBadge.innerText = "0";
+            cartTotalLabel.innerText = "0.00";
+            return;
+        }
+
+        emptyCartMsg.style.display = 'none';
+        mainSubmitBtn.disabled = false;
+        cartCountBadge.innerText = cart.length;
+
+        let totalSum = 0;
+
+        cart.forEach((item, index) => {
+            totalSum += item.subtotal;
+            const row = document.createElement('div');
+            row.className = "d-flex justify-content-between align-items-center bg-light p-2 mb-2 rounded border border-secondary-subtle";
+            row.innerHTML = `
+                <div>
+                    <span class="fw-bold text-dark d-block text-truncate" style="max-width: 200px;">${item.name}</span>
+                    <small class="text-muted">${item.quantity} x KES ${item.selling_price}</small>
+                </div>
+                <div class="d-flex align-items-center">
+                    <span class="fw-bold text-navy me-3 font-monospace">KES ${item.subtotal.toFixed(2)}</span>
+                    <button type="button" class="btn btn-sm text-danger p-0" onclick="removeItemFromCart(${index})">
+                        <i class="fas fa-trash-alt"></i>
+                    </button>
+                </div>
+            `;
+            cartContainer.appendChild(row);
+        });
+
+        cartTotalLabel.innerText = totalSum.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
+    }
+
+    window.removeItemFromCart = function(index) {
+        cart.splice(index, 1);
+        renderCart();
+    };
+
+    // ================================================================
+    // SUBMIT & POLLING (unchanged)
+    // ================================================================
+    globalCheckoutForm.addEventListener('submit', async function(e) {
+        e.preventDefault();
+
+        if (cart.length === 0) return;
+
+        const paymentMethod = methodSelect.value;
+        const phone = document.getElementById('id_customer_phone').value;
+        const customerName = document.getElementById('id_customer_name').value;
+
+        if (paymentMethod === 'MPESA' && !phone) {
+            alert("Please enter the M-Pesa phone number.");
+            return;
+        }
+
+        mainSubmitBtn.disabled = true;
+        mainSubmitBtn.innerHTML = `PROCESSING... <span class="spinner-border spinner-border-sm ms-2" role="status"></span>`;
+
+        if (paymentMethod === 'MPESA') {
+            document.getElementById('pollingStatus').innerText = "AWAITING PIN INPUT...";
+            overlay.style.display = 'flex';
+        }
+
+        const payload = {
+            items: cart,
+            payment_method: paymentMethod,
+            customer_phone: phone,
+            customer_name: customerName
+        };
+
+        const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+
         try {
-            const response = await fetch(salesForm.action, {
+            const response = await fetch(globalCheckoutForm.action, {
                 method: 'POST',
-                body: formData,
-                headers: { 'X-Requested-With': 'XMLHttpRequest' }
+                body: JSON.stringify(payload),
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': csrfToken,
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
             });
             const result = await response.json();
 
             if (result.status === 'initiated') {
                 startPolling(result.transaction_id);
+            } else if (result.status === 'success') {
+                overlay.style.display = 'none';
+                alert(result.message);
+                location.reload();
             } else {
                 overlay.style.display = 'none';
-                alert(result.message || "M-Pesa initialization failed.");
+                alert(result.message || "An error occurred.");
+                resetSubmitButton();
             }
         } catch (err) {
             overlay.style.display = 'none';
-            alert("Connection error. Ensure server is running.");
+            alert("Connection error occurred during processing.");
+            resetSubmitButton();
         }
     });
 
-    // Simple Polling (Add your actual check-status URL)
+    function resetSubmitButton() {
+        mainSubmitBtn.disabled = false;
+        mainSubmitBtn.innerHTML = `PROCESS BASKET CLEARANCE <i class="fas fa-check-circle ms-2"></i>`;
+    }
+
     async function startPolling(id) {
+        const statusLabel = document.getElementById('pollingStatus');
+        let counter = 0;
+
         const interval = setInterval(async () => {
-            const check = await fetch(`/check-mpesa-status/${id}/`);
-            const data = await check.json();
-            if (data.payment_status === 'COMPLETED') {
-                clearInterval(interval);
-                location.reload();
+            counter++;
+            if (counter === 3) statusLabel.innerText = "PROCESSING M-PESA CONFIRMATION...";
+            if (counter === 6) statusLabel.innerText = "CHECKING SECURE LEDGER LINES...";
+            
+            try {
+                const check = await fetch(`/check-mpesa-status/${id}/`);
+                const data = await check.json();
+                if (data.payment_status === 'COMPLETED' || data.payment_status === 'PAID') {
+                    statusLabel.className = "font-monospace text-success fw-bold small text-uppercase";
+                    statusLabel.innerText = "PAYMENT CONFIRMED SUCCESSFULLY!";
+                    clearInterval(interval);
+                    setTimeout(() => { location.reload(); }, 1200);
+                }
+            } catch (e) {
+                console.error("Polling system error:", e);
             }
         }, 4000);
     }

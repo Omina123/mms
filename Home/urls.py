@@ -34,6 +34,13 @@ path('payment_dashboard/', payment_dashboard, name='payment_dashboard'),
 path('paym_receipt/<int:payment_id>/', paym_receipt, name='paym_receipt'),
 # urls.py
 path('mpesa/callback/', mpesa_callback, name='mpesa_callback'),path('check-mpesa-status/<int:transaction_id>/', check_mpesa_status, name='check_status'),
+path('api/get-product-price/', get_product_price, name='get_product_price'),
+# urls.py
+
+
+    # ... existing URLs ...
+    path('manage-prices/', manage_prices, name='manage_prices'),
+
 
     path('print_receipt/<str:sale_id>/', print_receipt, name='print_receipt'),
     path('general_milk_margin_report/', general_milk_margin_report, name='general_milk_margin_report'),
@@ -42,4 +49,6 @@ path('mpesa/callback/', mpesa_callback, name='mpesa_callback'),path('check-mpesa
     path ('Admin_maize_intake_list/', Admin_maize_intake_list, name='Admin_maize_intake_list'),
     path('Admin_record_maize_intake/', Admin_record_maize_intake, name='Admin_record_maize_intake'),
     path('Admin_collect_milk/', Admin_collect_milk, name='Admin_collect_milk'),
+    path('shop/add-item/', add_shop_item, name='add_shop_item'),
+    path('business_margin_report/', business_margin_report, name='business_margin_report'),
 ]

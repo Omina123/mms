@@ -1,0 +1,157 @@
+{% extends "base_admin.html" %}
+
+{% block title %}Business Performance & Profit Margins{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+    <div class="row mb-4">
+        <div class="col-12 d-flex justify-content-between align-items-center flex-wrap">
+            <div>
+                <h2 class="text-dark font-weight-bold">Performance & Profit Margins Dashboard</h2>
+                <p class="text-muted">Real-time breakdown of processed farmer intakes and general commodity shop sales.</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="card shadow mb-4">
+        <div class="card-body bg-light">
+            <form method="GET" action="" class="form-inline row">
+                <div class="form-group col-md-4 mb-2">
+                    <label for="start_date" class="mr-2 font-weight-bold text-secondary">From Date:</label>
+                    <input type="date" id="start_date" name="start_date" value="{{ start_date|default:'' }}" class="form-control w-100">
+                </div>
+                <div class="form-group col-md-4 mb-2">
+                    <label for="end_date" class="mr-2 font-weight-bold text-secondary">To Date:</label>
+                    <input type="date" id="end_date" name="end_date" value="{{ end_date|default:'' }}" class="form-control w-100">
+                </div>
+                <div class="col-md-4 mb-2 d-flex align-items-end">
+                    <button type="submit" class="btn btn-primary font-weight-bold mr-2 px-4">🔍 Filter Records</button>
+                    <a href="{% url 'business_margin_report' %}" class="btn btn-secondary font-weight-bold">Clear</a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="card shadow mb-4">
+        <div class="card-header bg-primary text-white">
+            <h5 class="m-0 font-weight-bold">🥛 Farmer Milk Collections & Margins</h5>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-bordered table-striped" width="100%" cellspacing="0">
+                    <thead class="thead-dark">
+                        <tr>
+                            <th>Date Recorded</th>
+                            <th>Farmer Name</th>
+                            <th>Litres Delivered</th>
+                            <th>Buying Price (/L)</th>
+                            <th>Selling Price (/L)</th>
+                            <th>Margin (/L)</th>
+                            <th>Total Margin</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for record in milk_collections %}
+                        <tr>
+                            <td>{{ record.date|date:"Y-m-d H:i" }}</td>
+                            <td><strong>{{ record.farmer.name }}</strong></td>
+                            <td>{{ record.litres }} L</td>
+                            <td>Ksh {{ record.buying_price }}</td>
+                            <td>Ksh {{ record.selling_price }}</td>
+                            <td class="text-success font-weight-bold">Ksh {{ record.unit_margin }}</td>
+                            <td class="table-success font-weight-bold">Ksh {{ record.total_margin }}</td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="7" class="text-center text-muted">No milk collection records found within this timeframe.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div class="card shadow mb-4">
+        <div class="card-header bg-success text-white">
+            <h5 class="m-0 font-weight-bold">🌽 Maize Milling Performance (Yield Profiles)</h5>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-bordered table-striped" width="100%" cellspacing="0">
+                    <thead class="thead-dark">
+                        <tr>
+                            <th>Date Processed</th>
+                            <th>Batch No</th>
+                            <th>Sacks Pulled</th>
+                            <th>Avg Sacks Cost</th>
+                            <th>Yield Value / Sack</th>
+                            <th>Est. Margin / Sack</th>
+                            <th>Total Batch Profit</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for batch in maize_batches %}
+                        <tr>
+                            <td>{{ batch.date_recorded|date:"Y-m-d H:i" }}</td>
+                            <td><code>{{ batch.batch_no }}</code></td>
+                            <td>{{ batch.sacks_processed }} Sacks</td>
+                            <td>Ksh {{ batch.buying_price_per_sack|floatformat:2 }}</td>
+                            <td>Ksh {{ batch.estimated_yield_revenue_per_sack|floatformat:2 }}</td>
+                            <td class="text-success font-weight-bold">Ksh {{ batch.margin_per_sack|floatformat:2 }}</td>
+                            <td class="table-success font-weight-bold">Ksh {{ batch.total_batch_margin|floatformat:2 }}</td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="7" class="text-center text-muted">No milling batches processed within this timeframe.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div class="card shadow mb-4">
+        <div class="card-header bg-info text-white">
+            <h5 class="m-0 font-weight-bold">🏪 General Shop Sales & Realized Margins</h5>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-bordered table-striped" width="100%" cellspacing="0">
+                    <thead class="thead-dark">
+                        <tr>
+                            <th>Date Sold</th>
+                            <th>Item Description</th>
+                            <th>Qty Sold</th>
+                            <th>Wholesale Buying Price</th>
+                            <th>Retail Selling Price</th>
+                            <th>Unit Profit</th>
+                            <th>Total Realized Margin</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for sale in shop_sales %}
+                        {% if sale.shop_item %}
+                        <tr>
+                            <td>{{ sale.sold_at|date:"Y-m-d H:i" }}</td>
+                            <td><strong>{{ sale.shop_item.name }}</strong></td>
+                            <td>{{ sale.quantity }}</td>
+                            <td>Ksh {{ sale.item_buying_price }}</td>
+                            <td>Ksh {{ sale.selling_price }}</td>
+                            <td class="text-success font-weight-bold">Ksh {{ sale.unit_margin }}</td>
+                            <td class="table-success font-weight-bold">Ksh {{ sale.total_margin }}</td>
+                        </tr>
+                        {% endif %}
+                        {% empty %}
+                        <tr>
+                            <td colspan="7" class="text-center text-muted">No shop items transactions found within this timeframe.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

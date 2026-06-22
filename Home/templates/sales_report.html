@@ -50,7 +50,7 @@
 </style>
 
 <div class="container-fluid py-4">
-    <div class="mb-4 d-flex justify-content-between align-items-end">
+    <div class="mb-4 d-flex justify-content-between align-items-end flex-wrap gap-3">
         <div>
             <a href="{% url 'Admin' %}" class="text-decoration-none text-primary small fw-bold">
                 <i class="fas fa-arrow-left me-1"></i> Dashboard
@@ -58,11 +58,35 @@
             <h2 class="fw-bold mt-2 mb-0">Full Sales Ledger</h2>
             <p class="text-muted small mb-0">Detailed history of all product transactions</p>
         </div>
-        <div class="text-end">
-            <span class="badge bg-primary px-3 py-2 rounded-pill">
+        <div class="text-end d-flex gap-2">
+            <span class="badge bg-success px-3 py-2 rounded-pill d-flex align-items-center">
+                <i class="fas fa-wallet me-2"></i>Revenue: KES {{ total_revenue|intcomma }}
+            </span>
+            <span class="badge bg-primary px-3 py-2 rounded-pill d-flex align-items-center">
                 <i class="fas fa-file-invoice-dollar me-2"></i>{{ all_sales.count }} Records
             </span>
         </div>
+    </div>
+
+    <div class="glass-card shadow-sm border-0 p-4 mb-4">
+        <form method="GET" action="" class="row align-items-end">
+            <div class="col-md-4 mb-2 mb-md-0">
+                <label for="start_date" class="form-label small fw-bold text-muted">From Date:</label>
+                <input type="date" id="start_date" name="start_date" value="{{ start_date|default:'' }}" class="form-control rounded-3 border-light-subtle shadow-sm">
+            </div>
+            <div class="col-md-4 mb-2 mb-md-0">
+                <label for="end_date" class="form-label small fw-bold text-muted">To Date:</label>
+                <input type="date" id="end_date" name="end_date" value="{{ end_date|default:'' }}" class="form-control rounded-3 border-light-subtle shadow-sm">
+            </div>
+            <div class="col-md-4 d-flex gap-2">
+                <button type="submit" class="btn btn-primary fw-bold w-100 rounded-3 shadow-sm py-2">
+                    <i class="fas fa-filter me-2"></i>Filter Records
+                </button>
+                <a href="{% url 'sales_report' %}" class="btn btn-light border fw-bold px-3 rounded-3 py-2 text-muted">
+                    Clear
+                </a>
+            </div>
+        </form>
     </div>
 
     <div class="glass-card shadow-sm border-0">
@@ -120,7 +144,7 @@
                         <td colspan="6" class="text-center py-5">
                             <div class="text-muted">
                                 <i class="fas fa-folder-open fa-3x mb-3 d-block opacity-25"></i>
-                                No sales records found in the database.
+                                No transactions found for the selected date range.
                             </div>
                         </td>
                     </tr>

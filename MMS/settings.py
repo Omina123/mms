@@ -33,7 +33,6 @@ SECRET_KEY = 'django-insecure-o9^w15653c9!2(^$l1crynd+1_z2e5yno=%_ku!^@gdee0!%ve
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = False
-
 # settings.py
 
 # 1. Add the ngrok domain to ALLOWED_HOSTS
@@ -89,17 +88,17 @@ WSGI_APPLICATION = 'MMS.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
-#DATABASES = {
- #   'default': {
-  #      'ENGINE': 'django.db.backends.sqlite3',
-   #     'NAME': BASE_DIR / 'db.sqlite3',
-    #}
-#}
+# DATABASES = {
+#    'default': {
+#        'ENGINE': 'django.db.backends.sqlite3',
+#        'NAME': BASE_DIR / 'db.sqlite3',
+#     }
+# }
 
 
 DATABASES = {
     'default': dj_database_url.config(
-        default='postgresql://mms_yo47_user:4be0ZCyW3E72rhNhvvMFjii2Jb8k6AEf@dpg-d83i76v7f7vs7395nbt0-a.oregon-postgres.render.com/mms_yo47',
+        default='postgresql://mms_jqlu_user:Th0vrQQiymboQCWUVBxYML3Qwh9ohG5J@dpg-d8sfbkb7uimc738aibgg-a.oregon-postgres.render.com/mms_jqlu',
         conn_max_age=600,
         ssl_require=True
     )

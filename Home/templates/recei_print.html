@@ -1,4 +1,4 @@
-{% load tz%}
+{% load tz %}
 <!DOCTYPE html>
 <html>
 <head>
@@ -14,39 +14,57 @@
 </head>
 <body onload="window.print();">
     <div class="text-center">
-        <h2 class="bold" style="margin-bottom: 2px;"> MMS PRO RETAIL</h2>
+        <h2 class="bold" style="margin-bottom: 2px;">MMS PRO RETAIL</h2>
         <p style="margin: 0;">Eldoret Main Branch</p>
         <p style="margin: 0;">Tel: +254 7XX XXX XXX</p>
     </div>
 
     <div class="divider"></div>
-    <p> Date#: {% timezone "Africa/Nairobi" %}{{ sale.sold_at|date:"d/m/Y H:i" }}{% endtimezone %}</p>
-    <p>Receipt #: {{ sale.id|stringformat:"05d" }}</p>
+    <p>Date#: {% timezone "Africa/Nairobi" %}{{ main_details.sold_at|date:"d/m/Y H:i" }}{% endtimezone %}</p>
+    <p>Receipt Reference #: {{ main_details.transaction_id }}</p>
     <p>Cashier: {{ user.username|title }}</p>
+    
+    {% if main_details.customer_name %}
+    <p>Customer: {{ main_details.customer_name }}</p>
+    {% endif %}
     <div class="divider"></div>
 
     <table>
         <thead>
-            <tr>
+            <tr class="bold">
                 <th align="left">ITEM</th>
                 <th align="center">QTY</th>
                 <th align="right">TOTAL</th>
             </tr>
         </thead>
         <tbody>
+            {% for item in items %}
             <tr>
-                <td>{{ sale.product }}</td>
-                <td align="center">{{ sale.quantity }}</td>
-                <td align="right">{{ sale.total_revenue }}</td>
+                <td>
+                    {% if item.product == 'OTHER' and item.shop_item %}
+                        {{ item.shop_item.name }}
+                    {% else %}
+                        {{ item.get_product_display }}
+                    {% endif %}
+                </td>
+                <td align="center">
+                    {% if item.product == 'FLOUR1' or item.product == 'FLOUR2' %}
+                        {{ item.quantity|floatformat:0 }} KG
+                    {% else %}
+                        {{ item.quantity }}
+                    {% endif %}
+                </td>
+                <td align="right">KES {{ item.total_revenue }}</td>
             </tr>
+            {% endfor %}
         </tbody>
     </table>
 
     <div class="divider"></div>
     <p class="bold" style="font-size: 14px;">
-        TOTAL: <span style="float: right;">KES {{ sale.total_revenue }}</span>
+        TOTAL: <span style="float: right;">KES {{ grand_total }}</span>
     </p>
-    <p>Payment: {{ sale.payment_method }}</p>
+    <p>Payment Method: {{ main_details.get_payment_method_display }}</p>
     <div class="divider"></div>
 
     <div class="text-center footer">

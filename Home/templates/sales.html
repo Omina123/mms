@@ -71,7 +71,6 @@
     .form-label-custom { font-size: 0.75rem; font-weight: 800; color: #64748b; text-transform: uppercase; letter-spacing: 0.025em; margin-bottom: 0.5rem; display: block; }
 </style>
 
-<!-- Payment Process Glass Overlay -->
 <div id="loadingOverlay">
     <div class="payment-modal-box animate__animated animate__zoomIn">
         <div class="pulse-loader">
@@ -88,7 +87,6 @@
 </div>
 
 <div class="container-fluid py-4">
-    <!-- SECTION 1: TOP ROW GENERAL SUMMARY METRICS -->
     <div class="row g-3 mb-4">
         <div class="col-md-6">
             <div class="glass-card stat-card border-success p-4">
@@ -104,9 +102,7 @@
         </div>
     </div>
 
-    <!-- SECTION 2: POS MAIN SYSTEM OPERATIONAL AREA -->
     <div class="row g-4 mb-4">
-        <!-- TOP LEFT COMPONENT: Product Input Configurations Form -->
         <div class="col-xl-5 col-lg-6">
             <div class="glass-card p-4">
                 <div class="d-flex align-items-center mb-3">
@@ -144,7 +140,6 @@
             </div>
         </div>
 
-        <!-- TOP RIGHT COMPONENT: Virtual Active Operations Basket Panel -->
         <div class="col-xl-7 col-lg-6">
             <div class="glass-card p-4">
                 <div class="d-flex justify-content-between align-items-center mb-3">
@@ -197,9 +192,7 @@
         </div>
     </div>
 
-    <!-- SECTION 3: LOWER PAGE AREA GRID SECTION -->
     <div class="row g-4">
-        <!-- BOTTOM LEFT ALIGNED COMPONENT: Recent Shift Transactions Dashboard Log -->
         <div class="col-xl-7 col-lg-8">
             <div class="glass-card">
                 <div class="p-3 border-bottom d-flex justify-content-between align-items-center bg-light">
@@ -240,15 +233,14 @@
                                 <td>
                                     {% if sale.payment_method == 'MPESA' %}
                                         <span class="badge rounded-pill bg-primary-subtle text-primary border border-primary-subtle">📱 M-Pesa</span>
-                                    {% elif sale.payment_method == 'CREDIT' %}
+                                    {%   elif sale.payment_method == 'CREDIT' %}
                                         <span class="badge rounded-pill bg-warning-subtle text-warning-emphasis border border-warning-subtle">💳 Credit</span>
                                     {% else %}
                                         <span class="badge rounded-pill bg-success-subtle text-success border border-success-subtle">💵 Cash</span>
                                     {% endif %}
                                 </td>
                                 <td class="text-end pe-4">
-                                    <a href="{% url 'print_receipt' sale.id %}" class="btn btn-sm btn-outline-secondary rounded-pill">
-                                        <i class="fas fa-print me-1"></i> Receipt
+<a href="{% url 'print_receipt' sale.id %}" target="_blank" class="btn btn-sm btn-outline-secondary rounded-pill">                                        <i class="fas fa-print me-1"></i> Receipt
                                     </a>
                                 </td>
                             </tr>
@@ -263,7 +255,6 @@
             </div>
         </div>
         
-        <!-- Empty spacing filler layout to match sizing distribution neatly -->
         <div class="col-xl-5 col-lg-4 d-none d-lg-block"></div>
     </div>
 </div>
@@ -326,9 +317,6 @@
             });
     }
 
-    // ================================================================
-    // EXISTING FUNCTIONS (unchanged except we call updateSellingPrice)
-    // ================================================================
     function updateLabelsAndConversions() {
         const prod = productSelect.value;
         const qtyVal = parseFloat(quantityInput.value) || 0;
@@ -355,23 +343,19 @@
             shopItemBox.style.display = 'none';
         }
         updateLabelsAndConversions();
-        // also fetch price after toggling
         updateSellingPrice();
     }
 
-    // ================================================================
-    // ATTACH EVENTS
-    // ================================================================
     if (productSelect) {
         productSelect.addEventListener('change', function() {
-            toggleShopItemField();    // updates labels and calls updateSellingPrice
+            toggleShopItemField();
         });
         quantityInput.addEventListener('input', updateLabelsAndConversions);
-        toggleShopItemField();        // initial call
+        toggleShopItemField();
     }
 
     shopItemSelect.addEventListener('change', function() {
-        updateSellingPrice();         // when shop item changes, fetch its price
+        updateSellingPrice();
     });
 
     methodSelect.addEventListener('change', function() {
@@ -380,7 +364,7 @@
     });
 
     // ================================================================
-    // CART SYSTEM (unchanged)
+    // CART SYSTEM
     // ================================================================
     addItemBtn.addEventListener('click', function() {
         const productVal = productSelect.value;
@@ -466,7 +450,7 @@
     };
 
     // ================================================================
-    // SUBMIT & POLLING (unchanged)
+    // SUBMIT & POLLING (Now redirects to shared layout view)
     // ================================================================
     globalCheckoutForm.addEventListener('submit', async function(e) {
         e.preventDefault();
@@ -515,7 +499,12 @@
                 startPolling(result.transaction_id);
             } else if (result.status === 'success') {
                 overlay.style.display = 'none';
-                alert(result.message);
+                
+                // Fire shared thermal generation tab cleanly 
+                if (result.transaction_id) {
+                    window.open(`/print_receipt/${result.transaction_id}/`, '_blank');
+                }
+                
                 location.reload();
             } else {
                 overlay.style.display = 'none';
@@ -550,7 +539,12 @@
                     statusLabel.className = "font-monospace text-success fw-bold small text-uppercase";
                     statusLabel.innerText = "PAYMENT CONFIRMED SUCCESSFULLY!";
                     clearInterval(interval);
-                    setTimeout(() => { location.reload(); }, 1200);
+                    
+                    setTimeout(() => { 
+                        overlay.style.display = 'none';
+                        window.open(`/print_receipt/${id}/`, '_blank');
+                        location.reload(); 
+                    }, 1200);
                 }
             } catch (e) {
                 console.error("Polling system error:", e);

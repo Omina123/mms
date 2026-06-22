@@ -274,6 +274,7 @@ class ProductSale(models.Model):
     )
     mpesa_record = models.OneToOneField(MpesaTransaction, on_delete=models.SET_NULL, null=True, blank=True)
     mpesa_checkout_id = models.CharField(max_length=100, null=True, blank=True)
+    receipt_number = models.CharField(db_index=True, max_length=50, blank=True, null=True)
 
     def clean(self):
         # Validation to ensure data consistency

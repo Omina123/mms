@@ -305,9 +305,36 @@ from django.views.decorators.csrf import csrf_exempt
 
 #         return JsonResponse({"ResultCode": 0, "ResultDesc": "Success"})
 
-def print_receipt(request, sale_id):
-    sale = get_object_or_404(ProductSale, id=sale_id)
-    return render(request, 'recei_print.html', {'sale': sale})
+from django.shortcuts import render, get_object_or_404
+from .models import ProductSale
+from django.shortcuts import render
+from django.http import Http404
+from .models import ProductSale
+def print_receipt(request, transaction_id):
+    transaction_str = str(transaction_id)
+    
+    # 1. Search by our multi-item grouping token field first
+    sales_items = ProductSale.objects.filter(receipt_number=transaction_str)
+    
+    # 2. Fallback: If no match found, try looking up by historical raw integer ID or M-Pesa ID
+    if not sales_items.exists():
+        if transaction_str.isdigit():
+            sales_items = ProductSale.objects.filter(id=int(transaction_str))
+        else:
+            sales_items = ProductSale.objects.filter(mpesa_checkout_id=transaction_str)
+
+    if not sales_items.exists():
+        raise Http404("Receipt tracking context not found.")
+        
+    main_sale_details = sales_items.first()
+    grand_total = sum(item.total_revenue for item in sales_items)
+
+    context = {
+        'items': sales_items,
+        'main_details': main_sale_details,
+        'grand_total': grand_total,
+    }
+    return render(request, 'recei_print.html', context)
 from django.db import transaction
 from .mpesa_utilis import trigger_stk_push  # Ensure you import your utility function
 
@@ -333,7 +360,27 @@ from .mpesa_utilis import trigger_stk_push   # your M‑Pesa utility
 
 # -------------------------------------------------------------------
 # Helper to render the sales dashboard (DRY)
-# -------------------------------------------------------------------
+import uuid
+import json
+from decimal import Decimal, ROUND_HALF_UP
+from django.utils import timezone
+from django.db import transaction
+from django.shortcuts import redirect, render
+from django.http import JsonResponse
+from django.contrib import messages
+from django.db.models import Q, Sum
+from .models import ProductSale
+import uuid
+import json
+from decimal import Decimal, ROUND_HALF_UP
+from django.utils import timezone
+from django.db import transaction
+from django.shortcuts import redirect, render
+from django.http import JsonResponse
+from django.contrib import messages
+from django.db.models import Q, Sum
+from .models import ProductSale
+
 def _render_sales_dashboard(request, form):
     recent_sales = ProductSale.objects.all().order_by('-sold_at')[:10]
 
@@ -353,7 +400,7 @@ def _render_sales_dashboard(request, form):
     })
 
 # -------------------------------------------------------------------
-# Record Sale (handles multi‑item cart)
+# Record Sale (handles multi‑item cart with universal tracking ID)
 # -------------------------------------------------------------------
 def record_sale(request):
     if request.method == "POST":
@@ -363,7 +410,7 @@ def record_sale(request):
             try:
                 data = json.loads(request.body)
                 cart_items = data.get('items', [])
-                payment_method = data.get('payment_method', 'CASH')
+                payment_method = data.get('payment_method', 'CASH').upper()
                 customer_phone = data.get('customer_phone')
                 customer_name = data.get('customer_name')
 
@@ -379,6 +426,10 @@ def record_sale(request):
                         status=400
                     )
 
+                # Generate a universal receipt token for the entire cart session
+                unique_suffix = uuid.uuid4().hex[:6].upper()
+                receipt_token = f"REC-{timezone.now().strftime('%Y%m%d')}-{unique_suffix}"
+
                 total_order_revenue = Decimal('0.00')
                 saved_sales = []
 
@@ -386,7 +437,7 @@ def record_sale(request):
                     for item in cart_items:
                         shop_item_id = item.get('shop_item')
 
-                        # Create a new sale instance (no form used)
+                        # Create a new sale instance
                         sale = ProductSale()
                         sale.product = item.get('product')
                         if shop_item_id and sale.product == 'OTHER':
@@ -404,16 +455,19 @@ def record_sale(request):
 
                         sale.quantity = kg_quantity
                         sale.selling_price = kg_price
+                        sale.customer_name = customer_name
+                        
+                        # Apply the common tracking token to tie all row lines together
+                        sale.receipt_number = receipt_token
 
-                        # Set payment status and method
+                        # Assign payment details
                         if payment_method == 'CREDIT':
                             sale.payment_status = 'CREDIT'
                             sale.payment_method = 'CREDIT'
-                            sale.customer_name = customer_name   # now saved!
                         elif payment_method == 'MPESA':
                             sale.payment_status = 'PENDING'
                             sale.payment_method = 'MPESA'
-                        else:   # CASH
+                        else:  # CASH
                             sale.payment_status = 'PAID'
                             sale.payment_method = 'CASH'
 
@@ -433,14 +487,16 @@ def record_sale(request):
 
                     if mpesa_response.get('ResponseCode') == '0':
                         checkout_id = mpesa_response.get('CheckoutRequestID')
-                        # Attach the same CheckoutRequestID to all items in this batch
+                        
+                        # Synchronize both identifiers for tracking stability
                         for sale in saved_sales:
                             sale.mpesa_checkout_id = checkout_id
+                            sale.receipt_number = checkout_id
                             sale.save()
 
                         return JsonResponse({
                             'status': 'initiated',
-                            'transaction_id': saved_sales[0].id,
+                            'transaction_id': checkout_id,
                             'message': 'STK Push prompted successfully!'
                         })
                     else:
@@ -451,28 +507,28 @@ def record_sale(request):
                         )
 
                 # -------------------------------------------------------------------
-                # Cash or Credit – immediate success
+                # Cash or Credit – immediate success, return the generated token
                 # -------------------------------------------------------------------
                 return JsonResponse({
                     'status': 'success',
+                    'transaction_id': receipt_token,
                     'message': f'{len(saved_sales)} items saved successfully.'
                 })
 
             except Exception as e:
                 return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
 
-        # Non‑AJAX POST (shouldn't happen with our frontend)
+        # Non‑AJAX POST
         else:
             messages.error(request, "Invalid request format.")
             return redirect('record_sale')
 
     # GET request – show the dashboard with an empty form
     else:
-        from .forms import ProductSaleForm   # import locally if needed
+        from .forms import ProductSaleForm
         form = ProductSaleForm()
 
     return _render_sales_dashboard(request, form)
-# views.py
 def get_product_price(request):
     product_type = request.GET.get('product')
     shop_item_id = request.GET.get('shop_item')

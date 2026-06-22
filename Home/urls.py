@@ -42,8 +42,8 @@ path('api/get-product-price/', get_product_price, name='get_product_price'),
     path('manage-prices/', manage_prices, name='manage_prices'),
 
 
-    path('print_receipt/<str:sale_id>/', print_receipt, name='print_receipt'),
-    path('general_milk_margin_report/', general_milk_margin_report, name='general_milk_margin_report'),
+path('print_receipt/<int:transaction_id>/', print_receipt, name='print_receipt'),
+path('general_milk_margin_report/', general_milk_margin_report, name='general_milk_margin_report'),
     path ('sales_report/', sales_report, name='sales_report'),
     path('report/', report, name='report'),
     path ('Admin_maize_intake_list/', Admin_maize_intake_list, name='Admin_maize_intake_list'),

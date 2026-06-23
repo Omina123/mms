@@ -1,5 +1,5 @@
 {% extends "base_admin.html" %}  <!-- adapt the base name -->
-
+{% load tz %}
 {% block content %}
 <div class="container-fluid px-0">
     <div class="d-flex justify-content-between align-items-center mb-4">
@@ -45,15 +45,15 @@
                         <tr>
                             <td>
                                 <strong>{{ log.user.get_full_name|default:log.user.username }}</strong>
-                                <div class="text-muted small">{{ log.user.username }}</div>
+                                <div class="text-muted small">{{ log.user.username }}{{log.user.email}}</div>
                             </td>
-                            <td>{{ log.ip_address|default:"—" }}</td>
-                            <td>{{ log.timestamp|date:"Y-m-d H:i:s" }}</td>
+                            <td>{{ log.description|default:"—" }}</td>
+                            <td>{% timezone "Africa/Nairobi" %}{{ log.timestamp|date:"Y-m-d H:i:s" }}{% endtimezone %}</td>
                             <td>
                                 {% if log.status == "SUCCESS" %}
                                     <span class="badge bg-success bg-opacity-10 text-success">Success</span>
                                 {% else %}
-                                    <span class="badge bg-danger bg-opacity-10 text-danger">Failed</span>
+                                    <span class="badge bg-success bg-opacity-10 text-danger">Success</span>
                                 {% endif %}
                             </td>
                             <td class="text-muted small" style="max-width: 200px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">

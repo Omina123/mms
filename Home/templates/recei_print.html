@@ -22,7 +22,7 @@
     <div class="divider"></div>
     <p>Date#: {% timezone "Africa/Nairobi" %}{{ main_details.sold_at|date:"d/m/Y H:i" }}{% endtimezone %}</p>
     <p>Receipt Reference #: {{ main_details.transaction_id }}</p>
-    <p>Cashier: {{ user.username|title }}</p>
+    <p>Served by: {{ user.username|title }}</p>
     
     {% if main_details.customer_name %}
     <p>Customer: {{ main_details.customer_name }}</p>

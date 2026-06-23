@@ -44,7 +44,7 @@ path('login-activity/', login_activity, name='login_activity'),
     path('manage-prices/', manage_prices, name='manage_prices'),
 
 
-path('print_receipt/<int:transaction_id>/', print_receipt, name='print_receipt'),
+path('print_receipt/<str:transaction_id>/', print_receipt, name='print_receipt'),
 path('general_milk_margin_report/', general_milk_margin_report, name='general_milk_margin_report'),
     path ('sales_report/', sales_report, name='sales_report'),
     path('report/', report, name='report'),

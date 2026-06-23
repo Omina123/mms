@@ -2,26 +2,66 @@
 {% load humanize %}
 
 {% block content %}
-<div class="container-fluid py-4" id="dashboard-app">
-    <div class="row mb-4 align-items-center">
-        <div class="col">
-            <h2 class="fw-800 m-0 text-dark">Mill Operations <span class="fs-6 text-muted fw-normal">| Live Hub</span></h2>
+<div class="container-fluid py-3" id="dashboard-app">
+    
+    <!-- ======= TOP SUMMARY CARDS ======= -->
+    <div class="row g-2 mb-4">
+        <div class="col-6 col-md-3 col-xl-2">
+            <div class="summary-card bg-white p-2 rounded-3 shadow-sm text-center">
+                <h6 class="text-muted small mb-1">Products</h6>
+                <h4 class="fw-bold mb-0 text-dark">{{ total_products|default:0 }}</h4>
+            </div>
         </div>
-        <div class="col-auto">
-            <span class="badge bg-success fs-6 py-2 px-3 shadow-sm">
-                <i class="fas fa-clock me-2"></i>{% now "H:i:s" %}
-            </span>
+        <div class="col-6 col-md-3 col-xl-2">
+            <div class="summary-card bg-white p-2 rounded-3 shadow-sm text-center">
+                <h6 class="text-muted small mb-1">Low Stock</h6>
+                <h4 class="fw-bold mb-0 text-danger" id="summaryLowStock">{{ low_stock_count|default:0 }}</h4>
+            </div>
+        </div>
+        <div class="col-6 col-md-3 col-xl-2">
+            <div class="summary-card bg-white p-2 rounded-3 shadow-sm text-center">
+                <h6 class="text-muted small mb-1">Milk (L)</h6>
+                <h4 class="fw-bold mb-0 text-primary">{{ live_milk|default:0|floatformat:1 }}</h4>
+            </div>
+        </div>
+        <div class="col-6 col-md-3 col-xl-2">
+            <div class="summary-card bg-white p-2 rounded-3 shadow-sm text-center">
+                <h6 class="text-muted small mb-1">Maize Sacks</h6>
+                <h4 class="fw-bold mb-0 text-warning">{{ raw_stock|default:0 }}</h4>
+            </div>
+        </div>
+        <div class="col-6 col-md-3 col-xl-2">
+            <div class="summary-card bg-white p-2 rounded-3 shadow-sm text-center">
+                <h6 class="text-muted small mb-1">Today's Sales</h6>
+                <h4 class="fw-bold mb-0 text-success">KES {{ today_sales|default:0|intcomma }}</h4>
+            </div>
+        </div>
+        <div class="col-6 col-md-3 col-xl-2">
+            <div class="summary-card bg-white p-2 rounded-3 shadow-sm text-center">
+                <h6 class="text-muted small mb-1">This Week</h6>
+                <h4 class="fw-bold mb-0 text-info">{{ week_sales|default:0|intcomma }}</h4>
+            </div>
         </div>
     </div>
 
-    <!-- INVENTORY CARDS SECTION - All cards from the context -->
-    <div class="row g-3 mb-4">
-        <!-- Raw Maize Stock Card -->
-        <div class="col-xl-2 col-lg-3 col-md-4 col-sm-6">
+    <!-- ======= INVENTORY CARDS WITH SEARCH ======= -->
+    <div class="row mb-3 align-items-center">
+        <div class="col-md-6">
+            <h5 class="fw-bold m-0"><i class="fas fa-boxes me-2"></i>Inventory Overview</h5>
+        </div>
+        <div class="col-md-6">
+            <div class="input-group input-group-sm">
+                <span class="input-group-text bg-white border-end-0"><i class="fas fa-search text-muted"></i></span>
+                <input type="text" id="inventorySearch" class="form-control form-control-sm border-start-0" placeholder="Search products... (e.g. Unga, Milk, Sugar)">
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-2 mb-4" id="inventoryCardsContainer">
+        <!-- -------- Static Products (Maize, Unga, Germ, Bran, Milk) -------- -->
+        <div class="col-6 col-md-4 col-xl-2 inventory-item" data-name="Raw Maize">
             <div class="inventory-card shadow-sm">
-                <div class="card-icon bg-warning bg-opacity-10">
-                    <i class="fas fa-corn text-warning"></i>
-                </div>
+                <div class="card-icon bg-warning bg-opacity-10"><i class="fas fa-corn text-warning"></i></div>
                 <div class="card-stats">
                     <h3 class="mb-0 fw-bold stock-value">{{ raw_stock|default:0|intcomma }}</h3>
                     <span class="text-muted small">Raw Maize (Sacks)</span>
@@ -29,18 +69,13 @@
             </div>
         </div>
 
-        <div class="col-xl-2 col-lg-3 col-md-4 col-sm-6">
+        <div class="col-6 col-md-4 col-xl-2 inventory-item" data-name="Unga 1kg">
             <div class="inventory-card shadow-sm">
-                <div class="card-icon bg-info bg-opacity-10">
-                    <i class="fas fa-bread-slice text-info"></i>
-                </div>
+                <div class="card-icon bg-info bg-opacity-10"><i class="fas fa-bread-slice text-info"></i></div>
                 <div class="card-stats">
                     <h3 class="mb-0 fw-bold stock-value">{{ live_unga_1kg|default:0|floatformat:0|intcomma }}</h3>
                     <span class="text-muted small d-block">Unga 1kg (Bales)</span>
-                    
-                    {% widthratio live_unga_1kg|default:0 1 24 as total_1kg_weight %}
-                    <small class="text-primary fw-semibold font-monospace">Total: {{ total_1kg_weight|intcomma }} KGs</small>
-                    
+                    <small class="text-primary fw-semibold font-monospace">Total: {% widthratio live_unga_1kg|default:0 1 24 as total_1kg %}{{ total_1kg|intcomma }} KGs</small>
                     {% if live_unga_1kg|default:0 < 20 %}
                         <span class="badge bg-danger mt-1 low-stock-badge d-block">Low Stock!</span>
                     {% endif %}
@@ -48,18 +83,13 @@
             </div>
         </div>
 
-        <div class="col-xl-2 col-lg-3 col-md-4 col-sm-6">
+        <div class="col-6 col-md-4 col-xl-2 inventory-item" data-name="Unga 2kg">
             <div class="inventory-card shadow-sm">
-                <div class="card-icon bg-success bg-opacity-10">
-                    <i class="fas fa-bread-slice text-success"></i>
-                </div>
+                <div class="card-icon bg-success bg-opacity-10"><i class="fas fa-bread-slice text-success"></i></div>
                 <div class="card-stats">
                     <h3 class="mb-0 fw-bold stock-value">{{ live_unga_2kg|default:0|floatformat:0|intcomma }}</h3>
                     <span class="text-muted small d-block">Unga 2kg (Bales)</span>
-                    
-                    {% widthratio live_unga_2kg|default:0 1 24 as total_2kg_weight %}
-                    <small class="text-success fw-semibold font-monospace">Total: {{ total_2kg_weight|intcomma }} KGs</small>
-                    
+                    <small class="text-success fw-semibold font-monospace">Total: {% widthratio live_unga_2kg|default:0 1 24 as total_2kg %}{{ total_2kg|intcomma }} KGs</small>
                     {% if live_unga_2kg|default:0 < 15 %}
                         <span class="badge bg-danger mt-1 low-stock-badge d-block">Low Stock!</span>
                     {% endif %}
@@ -67,68 +97,45 @@
             </div>
         </div>
 
-        <div class="col-xl-2 col-lg-3 col-md-4 col-sm-6">
+        <div class="col-6 col-md-4 col-xl-2 inventory-item" data-name="Maize Germ">
             <div class="inventory-card shadow-sm">
-                <div class="card-icon bg-secondary bg-opacity-10">
-                    <i class="fas fa-seedling text-secondary"></i>
-                </div>
+                <div class="card-icon bg-secondary bg-opacity-10"><i class="fas fa-seedling text-secondary"></i></div>
                 <div class="card-stats">
                     <h3 class="mb-0 fw-bold stock-value">{{ live_germ|default:0|floatformat:0|intcomma }}</h3>
                     <span class="text-muted small d-block">Maize Germ (KG)</span>
-                    
-                    {% widthratio live_germ|default:0 90 1 as total_germ_bags %}
-                    <small class="text-secondary fw-semibold font-monospace">~ {{ total_germ_bags|intcomma }} Bags (90kg)</small>
+                    <small class="text-secondary fw-semibold font-monospace">~ {% widthratio live_germ|default:0 90 1 as total_germ_bags %}{{ total_germ_bags|intcomma }} Bags (90kg)</small>
                 </div>
             </div>
         </div>
 
-        <div class="col-xl-2 col-lg-3 col-md-4 col-sm-6">
+        <div class="col-6 col-md-4 col-xl-2 inventory-item" data-name="Maize Bran">
             <div class="inventory-card shadow-sm">
-                <div class="card-icon bg-brown bg-opacity-10">
-                    <i class="fas fa-wheat-alt text-brown"></i>
-                </div>
+                <div class="card-icon bg-brown bg-opacity-10"><i class="fas fa-wheat-alt text-brown"></i></div>
                 <div class="card-stats">
                     <h3 class="mb-0 fw-bold stock-value">{{ live_bran|default:0|floatformat:0|intcomma }}</h3>
                     <span class="text-muted small d-block">Maize Bran (KG)</span>
-                    
-                    {% widthratio live_bran|default:0 90 1 as total_bran_bags %}
-                    <small class="text-muted fw-semibold font-monospace text-dark">~ {{ total_bran_bags|intcomma }} Bags (90kg)</small>
+                    <small class="text-muted fw-semibold font-monospace text-dark">~ {% widthratio live_bran|default:0 90 1 as total_bran_bags %}{{ total_bran_bags|intcomma }} Bags (90kg)</small>
                 </div>
             </div>
         </div>
 
-        <div class="col-xl-2 col-lg-3 col-md-4 col-sm-6">
+        <div class="col-6 col-md-4 col-xl-2 inventory-item" data-name="Fresh Milk">
             <div class="inventory-card shadow-sm">
-                <div class="card-icon bg-primary bg-opacity-10">
-                    <i class="fas fa-jug text-primary"></i>
-                </div>
+                <div class="card-icon bg-primary bg-opacity-10"><i class="fas fa-jug text-primary"></i></div>
                 <div class="card-stats">
                     <h3 class="mb-0 fw-bold stock-value">{{ live_milk|default:0|floatformat:1|intcomma }}</h3>
                     <span class="text-muted small d-block">Fresh Milk (Litres)</span>
-                    <small class="text-primary fw-semibold font-monospace">&nbsp;</small> {% if live_milk|default:0 < 30 %}
+                    {% if live_milk|default:0 < 30 %}
                         <span class="badge bg-danger mt-1 low-stock-badge d-block">Low Stock!</span>
                     {% endif %}
                 </div>
             </div>
         </div>
 
-        <!-- Total Milk Collected Card -->
-        {% comment %} <div class="col-xl-2 col-lg-3 col-md-4 col-sm-6">
-            <div class="inventory-card shadow-sm">
-                <div class="card-icon bg-teal bg-opacity-10">
-                    <i class="fas fa-chart-line text-teal"></i>
-                </div>
-                <div class="card-stats">
-                    <h3 class="mb-0 fw-bold stock-value">{{ total_milk|default:0|floatformat:1|intcomma }}</h3>
-                    <span class="text-muted small">Total Milk Collected (L)</span>
-                </div>
-            </div>
-        </div> {% endcomment %}
-
-        <!-- Shop Items Stock Card - Dynamic for ALL shop products (Rice, Sugar, Cooking Oil, etc.) -->
+        <!-- -------- Dynamic Shop Items -------- -->
         {% if shop_items_stock %}
             {% for stock in shop_items_stock %}
-            <div class="col-xl-2 col-lg-3 col-md-4 col-sm-6">
+            <div class="col-6 col-md-4 col-xl-2 inventory-item" data-name="{{ stock.item.name }}">
                 <div class="inventory-card shadow-sm">
                     <div class="card-icon" style="background: {{ stock.item.color_code|default:'#e9ecef' }}20;">
                         <i class="{{ stock.item.icon_class|default:'fas fa-box' }}"></i>
@@ -146,15 +153,15 @@
         {% endif %}
     </div>
 
-    <div class="row g-4">
-        <!-- Recent Production Table -->
+    <!-- ======= RECENT ACTIVITY TABLES ======= -->
+    <div class="row g-4 mt-3">
         <div class="col-lg-7">
             <div class="glass-card shadow-sm h-100">
                 <div class="p-3 border-bottom d-flex justify-content-between align-items-center">
                     <h6 class="m-0 fw-bold"><i class="fas fa-industry me-2"></i>Recent Production</h6>
                     <div class="position-relative w-25">
                         <i class="fas fa-search position-absolute top-50 start-0 translate-middle-y ms-2 text-muted small"></i>
-                        <input type="text" id="batchSearch" class="form-control form-control-sm ps-4" placeholder="Search Batch ID...">
+                        <input type="text" id="batchSearch" class="form-control form-control-sm ps-4" placeholder="Search Batch...">
                     </div>
                 </div>
                 <div class="table-responsive">
@@ -166,7 +173,7 @@
                                 <th>UNGA 1KG</th>
                                 <th>UNGA 2KG</th>
                                 <th>STATUS</th>
-                            <tr>
+                            </tr>
                         </thead>
                         <tbody>
                             {% for batch in recent_batches %}
@@ -178,9 +185,7 @@
                                 <td><span class="badge bg-soft-success text-success border border-success-subtle">Completed</span></td>
                             </tr>
                             {% empty %}
-                            <tr>
-                                <td colspan="5" class="text-center py-4 text-muted">No recent batches found.</td>
-                            </tr>
+                            <tr><td colspan="5" class="text-center py-4 text-muted">No recent batches found.</td></tr>
                             {% endfor %}
                         </tbody>
                     </table>
@@ -188,7 +193,6 @@
             </div>
         </div>
 
-        <!-- Right Side - Sales and Milk Collections -->
         <div class="col-lg-5">
             <div class="row g-4">
                 <!-- Sales Feed -->
@@ -244,39 +248,26 @@
                         </div>
                     </div>
                 </div>
-
-                <!-- Stock Summary Card -->
-                <div class="col-12">
-                    <div class="glass-card shadow-sm bg-gradient-success text-white" style="background: linear-gradient(135deg, #14452F 0%, #1a5c3e 100%);">
-                        <div class="p-3">
-                            <div class="d-flex justify-content-between align-items-center mb-3">
-                                <h6 class="m-0 fw-bold text-white"><i class="fas fa-chart-pie me-2"></i>Stock Summary</h6>
-                                <i class="fas fa-boxes fs-4"></i>
-                            </div>
-                            <div class="row g-2 text-center">
-                                <div class="col-6">
-                                    <div class="bg-white bg-opacity-15 rounded p-2">
-                                        <div class="small">Total Products</div>
-                                        <div class="fs-4 fw-bold">{{ shop_items_stock|length|add:6 }}</div>
-                                    </div>
-                                </div>
-                                <div class="col-6">
-                                    <div class="bg-white bg-opacity-15 rounded p-2">
-                                        <div class="small">Low Stock Items</div>
-                                        <div class="fs-4 fw-bold" id="lowStockCount">0</div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
             </div>
         </div>
     </div>
 </div>
 
+<!-- ======= FLOATING TOAST NOTIFICATIONS ======= -->
+<div id="toastContainer" style="position: fixed; bottom: 20px; right: 20px; z-index: 9999; max-width: 350px;"></div>
+
 <style>
-    /* Compact Inventory Card Styling */
+    /* ---------- SUMMARY CARDS ---------- */
+    .summary-card {
+        border: 1px solid rgba(0,0,0,0.04);
+        transition: all 0.2s;
+    }
+    .summary-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.08) !important;
+    }
+
+    /* ---------- INVENTORY CARDS ---------- */
     .inventory-card {
         background: white;
         border-radius: 16px;
@@ -287,13 +278,12 @@
         transition: all 0.2s ease;
         border: 1px solid rgba(0,0,0,0.05);
         cursor: pointer;
+        height: 100%;
     }
-    
     .inventory-card:hover {
         transform: translateY(-2px);
         box-shadow: 0 8px 20px rgba(0,0,0,0.1) !important;
     }
-    
     .card-icon {
         width: 48px;
         height: 48px;
@@ -302,241 +292,268 @@
         justify-content: center;
         border-radius: 14px;
         font-size: 1.6rem;
+        flex-shrink: 0;
     }
-    
+    .card-stats {
+        flex: 1;
+        min-width: 0;
+    }
     .card-stats h3 {
         font-size: 1.5rem;
         line-height: 1.2;
         margin-bottom: 4px;
     }
-    
     .card-stats span {
         font-size: 0.7rem;
         letter-spacing: 0.3px;
+        display: block;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
     }
-    
     .low-stock-badge {
         font-size: 0.65rem;
         padding: 2px 6px;
         margin-top: 4px;
         display: inline-block;
     }
-    
     .glass-card {
         background: white;
         border-radius: 20px;
         border: 1px solid rgba(0,0,0,0.06);
         overflow: hidden;
     }
-    
     .bg-soft-success {
         background-color: #e8f8f0;
         color: #10b981;
     }
-    
-    .fw-800 {
-        font-weight: 800;
-    }
-    
-    /* Color utilities for icons */
-    .text-brown {
-        color: #8B5A2B;
-    }
-    .bg-brown {
-        background-color: #8B5A2B;
-    }
-    .text-teal {
-        color: #14b8a6;
-    }
-    .bg-teal {
-        background-color: #14b8a6;
-    }
-    
-    /* Animation for the "Active" dot */
+    .text-brown { color: #8B5A2B; }
+    .bg-brown { background-color: #8B5A2B; }
+
     .animate-pulse {
         animation: pulse 2s infinite;
         font-size: 8px;
         vertical-align: middle;
     }
-    
     @keyframes pulse {
         0% { opacity: 1; }
         50% { opacity: 0.3; }
         100% { opacity: 1; }
     }
-    
-    /* Flash green for new entries */
-    .new-entry-flash { 
-        animation: flash-green 2s ease-out; 
+
+    .stock-updated {
+        animation: stockPulse 0.5s ease-out;
+        display: inline-block;
     }
-    
-    @keyframes flash-green {
-        0% { background-color: #f0fff4; }
-        100% { background-color: transparent; }
-    }
-    
-    .sale-item:hover { 
-        background-color: #f8f9fa; 
-        cursor: pointer;
-    }
-    
-    .table thead th { 
-        letter-spacing: 0.05em; 
-        font-weight: 700; 
-        font-size: 0.7rem;
-        text-transform: uppercase;
-    }
-    
-    /* Stock value pulse animation */
     @keyframes stockPulse {
         0% { transform: scale(1); }
         50% { transform: scale(1.05); color: #10b981; }
         100% { transform: scale(1); }
     }
-    
-    .stock-updated {
-        animation: stockPulse 0.5s ease-out;
-        display: inline-block;
+
+    /* ---------- TOASTS ---------- */
+    .toast-custom {
+        background: white;
+        border-left: 4px solid #0d6efd;
+        border-radius: 12px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+        padding: 14px 18px;
+        margin-bottom: 12px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        animation: slideIn 0.4s ease-out;
+        font-size: 0.9rem;
     }
-    
-    /* Responsive adjustments */
+    .toast-custom.success { border-left-color: #198754; }
+    .toast-custom.warning { border-left-color: #ffc107; }
+    .toast-custom.danger { border-left-color: #dc3545; }
+    .toast-custom .toast-close {
+        margin-left: auto;
+        background: none;
+        border: none;
+        font-size: 1.2rem;
+        cursor: pointer;
+        color: #999;
+    }
+    .toast-custom .toast-close:hover { color: #333; }
+
+    @keyframes slideIn {
+        0% { transform: translateX(100px); opacity: 0; }
+        100% { transform: translateX(0); opacity: 1; }
+    }
+
+    /* ---------- RESPONSIVE ---------- */
     @media (max-width: 768px) {
         .inventory-card {
             padding: 8px 10px;
         }
         .card-icon {
-            width: 40px;
-            height: 40px;
+            width: 36px;
+            height: 36px;
             font-size: 1.2rem;
         }
         .card-stats h3 {
-            font-size: 1.2rem;
+            font-size: 1.1rem;
         }
+        .card-stats span {
+            font-size: 0.6rem;
+        }
+        .summary-card h4 {
+            font-size: 1.1rem;
+        }
+        .summary-card h6 {
+            font-size: 0.6rem;
+        }
+        .toast-custom {
+            padding: 10px 12px;
+            font-size: 0.8rem;
+            max-width: 280px;
+        }
+    }
+    @media (max-width: 576px) {
+        .col-6 { flex: 0 0 50%; max-width: 50%; }
+    }
+    @media (min-width: 768px) and (max-width: 991px) {
+        .col-md-4 { flex: 0 0 33.333%; max-width: 33.333%; }
+    }
+    @media (min-width: 992px) {
+        .col-xl-2 { flex: 0 0 16.666%; max-width: 16.666%; }
     }
 </style>
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    
-    // 1. Search for Batch Number
-    const searchInput = document.getElementById('batchSearch');
-    const rows = document.querySelectorAll('.batch-row');
-    
+
+    // ========== 1. INVENTORY SEARCH ==========
+    const searchInput = document.getElementById('inventorySearch');
+    const inventoryItems = document.querySelectorAll('.inventory-item');
+
     if (searchInput) {
         searchInput.addEventListener('input', function(e) {
             const term = e.target.value.toLowerCase().trim();
-            
-            rows.forEach(row => {
-                const batchIdCell = row.querySelector('.batch-id-cell');
-                if (batchIdCell) {
-                    const batchId = batchIdCell.textContent.toLowerCase();
-                    if (batchId.includes(term)) {
-                        row.style.display = '';
-                    } else {
-                        row.style.display = 'none';
-                    }
+            inventoryItems.forEach(item => {
+                const name = item.getAttribute('data-name')?.toLowerCase() || '';
+                if (name.includes(term) || term === '') {
+                    item.style.display = '';
+                } else {
+                    item.style.display = 'none';
                 }
             });
         });
     }
-    
-    // 2. Count low stock items
-    function countLowStockItems() {
-        let lowStockCount = 0;
-        
-        // Check Unga 1kg
-        const unga1kg = parseFloat("{{ live_unga_1kg|default:0 }}");
-        if (unga1kg < 20 && unga1kg > 0) lowStockCount++;
-        
-        // Check Unga 2kg
-        const unga2kg = parseFloat("{{ live_unga_2kg|default:0 }}");
-        if (unga2kg < 15 && unga2kg > 0) lowStockCount++;
-        
-        // Check Milk
-        const milk = parseFloat("{{ live_milk|default:0 }}");
-        if (milk < 30 && milk > 0) lowStockCount++;
-        
-        // Check shop items
-        {% if shop_items_stock %}
-            {% for stock in shop_items_stock %}
-                const stockQty{{ forloop.counter }} = parseFloat("{{ stock.quantity|default:0 }}");
-                const reorderLevel{{ forloop.counter }} = parseFloat("{{ stock.item.reorder_level|default:0 }}");
-                if (stockQty{{ forloop.counter }} <= reorderLevel{{ forloop.counter }} && stockQty{{ forloop.counter }} > 0) {
-                    lowStockCount++;
+
+    // ========== 2. BATCH SEARCH ==========
+    const batchSearch = document.getElementById('batchSearch');
+    const batchRows = document.querySelectorAll('.batch-row');
+    if (batchSearch) {
+        batchSearch.addEventListener('input', function(e) {
+            const term = e.target.value.toLowerCase().trim();
+            batchRows.forEach(row => {
+                const idCell = row.querySelector('.batch-id-cell');
+                if (idCell && idCell.textContent.toLowerCase().includes(term)) {
+                    row.style.display = '';
+                } else {
+                    row.style.display = 'none';
                 }
-            {% endfor %}
-        {% endif %}
+            });
+        });
+    }
+
+    // ========== 3. TOAST SYSTEM ==========
+    function showToast(message, type = 'info', duration = 4000) {
+        const container = document.getElementById('toastContainer');
+        const toast = document.createElement('div');
+        toast.className = `toast-custom ${type}`;
         
-        const lowStockElement = document.getElementById('lowStockCount');
-        if (lowStockElement) {
-            lowStockElement.textContent = lowStockCount;
-            if (lowStockCount > 0) {
-                lowStockElement.style.color = '#ffcc00';
+        let icon = '';
+        if (type === 'success') icon = '✅';
+        else if (type === 'warning') icon = '⚠️';
+        else if (type === 'danger') icon = '❌';
+        else icon = 'ℹ️';
+        
+        toast.innerHTML = `
+            <span>${icon}</span>
+            <span style="flex:1;">${message}</span>
+            <button class="toast-close">&times;</button>
+        `;
+        container.appendChild(toast);
+
+        // Close button
+        toast.querySelector('.toast-close').addEventListener('click', function() {
+            toast.remove();
+        });
+
+        // Auto-remove after duration
+        setTimeout(() => {
+            if (toast.parentNode) {
+                toast.style.opacity = '0';
+                toast.style.transition = 'opacity 0.3s';
+                setTimeout(() => toast.remove(), 300);
             }
-        }
+        }, duration);
     }
-    
-    countLowStockItems();
-    
-    // 3. Low Stock Alerts (Console warnings)
-    const unga1kg = parseFloat("{{ live_unga_1kg|default:0 }}");
-    const unga2kg = parseFloat("{{ live_unga_2kg|default:0 }}");
-    const milk = parseFloat("{{ live_milk|default:0 }}");
-    
-    if (unga1kg < 20 && unga1kg > 0) {
-        console.warn("⚠️ Low Stock Alert: Unga 1kg is below 20 bales (Current: " + unga1kg + ")");
-    }
-    if (unga2kg < 15 && unga2kg > 0) {
-        console.warn("⚠️ Low Stock Alert: Unga 2kg is below 15 bales (Current: " + unga2kg + ")");
-    }
-    if (milk < 30 && milk > 0) {
-        console.warn("⚠️ Low Stock Alert: Fresh milk is below 30 litres (Current: " + milk + ")");
-    }
-    
-    // 4. Highlight Animation for newest sale
-    const firstSale = document.querySelector('.sale-item');
-    if (firstSale) {
-        firstSale.classList.add('new-entry-flash');
-        setTimeout(() => {
-            firstSale.classList.remove('new-entry-flash');
-        }, 2000);
-    }
-    
-    // 5. Highlight Animation for newest milk collection
-    const firstMilk = document.querySelector('.border-bottom.d-flex.justify-content-between');
-    if (firstMilk && !firstMilk.classList.contains('sale-item')) {
-        firstMilk.classList.add('new-entry-flash');
-        setTimeout(() => {
-            firstMilk.classList.remove('new-entry-flash');
-        }, 2000);
-    }
-    
-    // 6. Auto-refresh every 60 seconds (optional)
-    let autoRefresh = false; // Set to true if you want auto-refresh
-    if (autoRefresh) {
-        setInterval(function() {
-            location.reload();
-        }, 60000);
-    }
-    
-    // 7. Click on stock card to show alert (for demo)
+
+    // ========== 4. CARD CLICK ==========
     const stockCards = document.querySelectorAll('.inventory-card');
     stockCards.forEach(card => {
-        card.addEventListener('click', function() {
-            const productName = this.querySelector('.card-stats span:first-child')?.innerText || 'Product';
-            const stockValue = this.querySelector('.stock-value')?.innerText || '0';
-            console.log(`📊 ${productName}: ${stockValue}`);
-            
-            // Add pulse animation
-            const stockValueEl = this.querySelector('.stock-value');
-            if (stockValueEl) {
-                stockValueEl.classList.add('stock-updated');
-                setTimeout(() => {
-                    stockValueEl.classList.remove('stock-updated');
-                }, 500);
+        card.addEventListener('click', function(e) {
+            const nameEl = this.querySelector('.card-stats span:first-child');
+            const valueEl = this.querySelector('.stock-value');
+            if (nameEl && valueEl) {
+                const name = nameEl.innerText.trim();
+                const value = valueEl.innerText.trim();
+                showToast(`📦 ${name}: ${value}`, 'info', 3000);
+            }
+            // Pulse animation
+            const val = this.querySelector('.stock-value');
+            if (val) {
+                val.classList.add('stock-updated');
+                setTimeout(() => val.classList.remove('stock-updated'), 500);
             }
         });
     });
+
+    // ========== 5. LOW STOCK NOTIFICATIONS ==========
+    (function checkLowStock() {
+        // Static products
+        const unga1kg = parseFloat("{{ live_unga_1kg|default:0 }}");
+        const unga2kg = parseFloat("{{ live_unga_2kg|default:0 }}");
+        const milk = parseFloat("{{ live_milk|default:0 }}");
+        const lowStockItems = [];
+
+        if (unga1kg < 20 && unga1kg > 0) lowStockItems.push(`Unga 1kg (${unga1kg} bales)`);
+        if (unga2kg < 15 && unga2kg > 0) lowStockItems.push(`Unga 2kg (${unga2kg} bales)`);
+        if (milk < 30 && milk > 0) lowStockItems.push(`Fresh Milk (${milk} litres)`);
+
+        // Shop items
+        {% if shop_items_stock %}
+            {% for stock in shop_items_stock %}
+                const qty{{ forloop.counter }} = parseFloat("{{ stock.quantity|default:0 }}");
+                const reorder{{ forloop.counter }} = parseFloat("{{ stock.item.reorder_level|default:0 }}");
+                if (qty{{ forloop.counter }} <= reorder{{ forloop.counter }} && qty{{ forloop.counter }} > 0) {
+                    lowStockItems.push("{{ stock.item.name }} ({{ stock.quantity }})");
+                }
+            {% endfor %}
+        {% endif %}
+
+        // Show one combined toast if any low stock
+        if (lowStockItems.length > 0) {
+            const msg = `⚠️ Low Stock Alert: ${lowStockItems.join(', ')}`;
+            showToast(msg, 'warning', 6000);
+            // Also update summary count
+            const summaryLow = document.getElementById('summaryLowStock');
+            if (summaryLow) summaryLow.textContent = lowStockItems.length;
+        } else {
+            const summaryLow = document.getElementById('summaryLowStock');
+            if (summaryLow) summaryLow.textContent = '0';
+        }
+    })();
+
+    // ========== 6. DEMO MESSAGES (optional) ==========
+    // Uncomment to test toast:
+    // setTimeout(() => showToast('Welcome to MMS PRO!', 'success', 3000), 1000);
+    // setTimeout(() => showToast('New sale recorded: KES 2,500', 'info', 4000), 3000);
 });
 </script>
 {% endblock %}

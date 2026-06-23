@@ -1,7 +1,9 @@
 from django.contrib import admin
-from django.urls import path
+from django.urls import path, register_converter
 from Home.views import *
+from .converters import ReceiptCodeConverter
 
+register_converter(ReceiptCodeConverter, 'receipt_code')
 urlpatterns = [
     # path('admin/', admin.site.urls),
     path('', home, name='home'),
@@ -44,8 +46,7 @@ path('login-activity/', login_activity, name='login_activity'),
     path('manage-prices/', manage_prices, name='manage_prices'),
 
 
-path('print_receipt/<str:transaction_id>/', print_receipt, name='print_receipt'),
-path('general_milk_margin_report/', general_milk_margin_report, name='general_milk_margin_report'),
+path('print_receipt/<str:transaction_id>/', print_receipt, name='print_receipt'),path('general_milk_margin_report/', general_milk_margin_report, name='general_milk_margin_report'),
     path ('sales_report/', sales_report, name='sales_report'),
     path('report/', report, name='report'),
     path ('Admin_maize_intake_list/', Admin_maize_intake_list, name='Admin_maize_intake_list'),

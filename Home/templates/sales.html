@@ -240,8 +240,9 @@
                                     {% endif %}
                                 </td>
                                 <td class="text-end pe-4">
-<a href="{% url 'print_receipt' sale.id %}" target="_blank" class="btn btn-sm btn-outline-secondary rounded-pill">                                        <i class="fas fa-print me-1"></i> Receipt
-                                    </a>
+<a href="{% url 'print_receipt' sale.receipt_number %}" target="_blank" class="btn btn-sm btn-outline-secondary rounded-pill">
+    <i class="fas fa-print me-1"></i> Receipt
+</a>                                    </a>
                                 </td>
                             </tr>
                             {% empty %}

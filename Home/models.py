@@ -1,3 +1,4 @@
+from datetime import datetime
 import uuid
 from decimal import Decimal
 from django.db import models
@@ -276,32 +277,38 @@ class ProductSale(models.Model):
     mpesa_checkout_id = models.CharField(max_length=100, null=True, blank=True)
     receipt_number = models.CharField(db_index=True, max_length=50, blank=True, null=True)
 
+# ... your other imports
+
     def clean(self):
         # Validation to ensure data consistency
         if self.product == 'OTHER' and not self.shop_item:
-            raise ValidationError("You selected 'General Shop Item'. Please specify which item was sold in the 'shop_item' field.")
+            raise ValidationError({"shop_item": "Please specify the item for General Shop sales."})
         if self.product != 'OTHER' and self.shop_item:
-            raise ValidationError("You cannot pick a specific milling product and link a general shop item at the same time.")
+            raise ValidationError({"shop_item": "Milling products should not be linked to general shop items."})
 
     def save(self, *args, **kwargs):
-        # 1. Run validation rules first
+        # 1. Ensure validation runs
         self.full_clean()
         
-        # 2. Compute total cost
+        # 2. Compute total
         self.total_revenue = Decimal(str(self.quantity)) * Decimal(str(self.selling_price))
         
-        # 3. Handle stock deductions atomically for new entries
+        # 3. Handle new entries
         if not self.pk:
+            # Generate Receipt Number if missing (Ensures compatibility with URL patterns)
+            if not self.receipt_number:
+                date_str = datetime.now().strftime('%Y%m%d')
+                unique_id = uuid.uuid4().hex[:6].upper()
+                self.receipt_number = f"REC-{date_str}-{unique_id}"
+
             with transaction.atomic():
                 if self.product == 'OTHER':
-                    # Deduct from dynamic shop stock
                     stock = ShopItemStock.objects.select_for_update().get(item=self.shop_item)
                     if stock.quantity < self.quantity:
-                        raise ValidationError(f"Insufficient stock for {self.shop_item.name}! Available: {stock.quantity}")
+                        raise ValidationError(f"Insufficient stock for {self.shop_item.name}!")
                     stock.quantity -= self.quantity
                     stock.save()
                 else:
-                    # Deduct from traditional processed stock
                     stock = ProductStock.objects.select_for_update().get(product_type=self.product)
                     if stock.quantity < self.quantity:
                         raise ValidationError(f"Insufficient {self.get_product_display()} stock!")
@@ -311,10 +318,12 @@ class ProductSale(models.Model):
         super().save(*args, **kwargs)
 
     def __str__(self):
-        if self.product == 'OTHER' and self.shop_item:
-            return f"{self.shop_item.name} - {self.quantity} @ {self.sold_at.strftime('%H:%M')}"
-        return f"{self.get_product_display()} - {self.quantity} @ {self.sold_at.strftime('%H:%M')}"
-
+        # Fallback to 'Pending' if object is not yet saved (avoiding attribute errors)
+        time_str = self.sold_at.strftime('%H:%M') if self.sold_at else "Pending"
+        
+        item_name = self.shop_item.name if (self.product == 'OTHER' and self.shop_item) else self.get_product_display()
+        
+        return f"{item_name}: {self.quantity} units @ {time_str}"
 from django.db import models, transaction
 
 class FarmerPayment(models.Model):

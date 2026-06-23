@@ -864,6 +864,7 @@ from decimal import Decimal
 from django.db import transaction
 from django.contrib import messages
 from django.shortcuts import redirect, render
+from decimal import Decimal
 
 def collect_milk(request):
     if request.method == "POST":
@@ -881,12 +882,13 @@ def collect_milk(request):
                         product_type='MILK'
                     )
 
-                    stock.quantity += Decimal(str(collection.litres))
+                    # FIX: convert both sides to Decimal
+                    stock.quantity = Decimal(str(stock.quantity)) + Decimal(str(collection.litres))
                     stock.save()
 
                     # 3. UPDATE FARMER BALANCE (ONLY HERE NOW)
                     farmer = collection.farmer
-                    farmer.milking_balance += Decimal(str(collection.total_cost))
+                    farmer.milking_balance = Decimal(str(farmer.milking_balance)) + Decimal(str(collection.total_cost))
                     farmer.save()
 
                     # 4. SMS

@@ -1485,3 +1485,12 @@ def business_margin_report(request):
     }
     
     return render(request, 'margin_report.html', context)
+# views.py
+from django.shortcuts import render
+from .models import ActivityLog
+
+def login_activity(request):
+    # Filter only login actions, order by newest first
+    logs = ActivityLog.objects.filter(action='LOGIN').select_related('user').order_by('-timestamp')
+    context = {'login_logs': logs}
+    return render(request, 'login_activity.html', context)

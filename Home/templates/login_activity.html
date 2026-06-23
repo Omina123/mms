@@ -1,0 +1,128 @@
+{% extends "base_admin.html" %}  <!-- adapt the base name -->
+
+{% block content %}
+<div class="container-fluid px-0">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h4 class="fw-bold mb-0"><i class="fas fa-history me-2"></i>Login Activity</h4>
+        <div>
+            <span class="badge bg-secondary">{{ login_logs|length }} total entries</span>
+        </div>
+    </div>
+
+    <!-- Optional filter / search bar -->
+    <div class="row g-3 mb-4">
+        <div class="col-md-4">
+            <input type="text" id="searchInput" class="form-control form-control-sm" placeholder="Search by username or IP...">
+        </div>
+        <div class="col-md-2">
+            <select id="statusFilter" class="form-select form-select-sm">
+                <option value="">All Status</option>
+                <option value="SUCCESS">Success</option>
+                <option value="FAILED">Failed</option>
+            </select>
+        </div>
+        <div class="col-md-2">
+            <button class="btn btn-outline-secondary btn-sm" id="clearFilters"><i class="fas fa-times"></i> Clear</button>
+        </div>
+    </div>
+
+    <!-- Table -->
+    <div class="card shadow-sm border-0">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0" id="loginTable">
+                    <thead class="table-light">
+                        <tr>
+                            <th>User</th>
+                            <th>IP Address</th>
+                            <th>Login Time</th>
+                            <th>Status</th>
+                            <th>User Agent</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for log in login_logs %}
+                        <tr>
+                            <td>
+                                <strong>{{ log.user.get_full_name|default:log.user.username }}</strong>
+                                <div class="text-muted small">{{ log.user.username }}</div>
+                            </td>
+                            <td>{{ log.ip_address|default:"—" }}</td>
+                            <td>{{ log.timestamp|date:"Y-m-d H:i:s" }}</td>
+                            <td>
+                                {% if log.status == "SUCCESS" %}
+                                    <span class="badge bg-success bg-opacity-10 text-success">Success</span>
+                                {% else %}
+                                    <span class="badge bg-danger bg-opacity-10 text-danger">Failed</span>
+                                {% endif %}
+                            </td>
+                            <td class="text-muted small" style="max-width: 200px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                                {{ log.description|default:"—"|truncatechars:500}}
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="5" class="text-center py-4 text-muted">
+                                <i class="fas fa-inbox fa-2x d-block mb-2"></i>
+                                No login activity recorded yet.
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Optional pagination (if you add pagination in view) -->
+    {% if is_paginated %}
+    <nav class="mt-4">
+        <ul class="pagination justify-content-center">
+            {% if page_obj.has_previous %}
+                <li class="page-item"><a class="page-link" href="?page=1">&laquo; first</a></li>
+                <li class="page-item"><a class="page-link" href="?page={{ page_obj.previous_page_number }}">previous</a></li>
+            {% endif %}
+            <li class="page-item disabled"><span class="page-link">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span></li>
+            {% if page_obj.has_next %}
+                <li class="page-item"><a class="page-link" href="?page={{ page_obj.next_page_number }}">next</a></li>
+                <li class="page-item"><a class="page-link" href="?page={{ page_obj.paginator.num_pages }}">last &raquo;</a></li>
+            {% endif %}
+        </ul>
+    </nav>
+    {% endif %}
+</div>
+
+<!-- JavaScript for filtering (client-side) -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const searchInput = document.getElementById('searchInput');
+    const statusFilter = document.getElementById('statusFilter');
+    const clearBtn = document.getElementById('clearFilters');
+    const table = document.getElementById('loginTable');
+    const rows = table.querySelectorAll('tbody tr');
+
+    function filterTable() {
+        const searchTerm = searchInput.value.toLowerCase();
+        const status = statusFilter.value;
+        rows.forEach(row => {
+            const cells = row.querySelectorAll('td');
+            if (cells.length === 0) return;
+            const username = cells[0]?.textContent?.toLowerCase() || '';
+            const ip = cells[1]?.textContent?.toLowerCase() || '';
+            const rowStatus = cells[3]?.textContent?.trim() || '';
+            const matchSearch = username.includes(searchTerm) || ip.includes(searchTerm);
+            const matchStatus = status === '' || rowStatus.toLowerCase() === status.toLowerCase();
+            row.style.display = (matchSearch && matchStatus) ? '' : 'none';
+        });
+    }
+
+    searchInput.addEventListener('input', filterTable);
+    statusFilter.addEventListener('change', filterTable);
+    clearBtn.addEventListener('click', function() {
+        searchInput.value = '';
+        statusFilter.value = '';
+        filterTable();
+    });
+});
+</script>
+{% endblock %}

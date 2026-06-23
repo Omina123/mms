@@ -36,6 +36,8 @@ path('paym_receipt/<int:payment_id>/', paym_receipt, name='paym_receipt'),
 path('mpesa/callback/', mpesa_callback, name='mpesa_callback'),path('check-mpesa-status/<int:transaction_id>/', check_mpesa_status, name='check_status'),
 path('api/get-product-price/', get_product_price, name='get_product_price'),
 # urls.py
+path('login-activity/', login_activity, name='login_activity'),
+# urls.py
 
 
     # ... existing URLs ...

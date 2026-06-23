@@ -31,10 +31,24 @@ def register(request):
 
     return render(request, 'register.html', {'form': form})
 
+from django.contrib.auth import authenticate, login
+from django.contrib import messages
+from django.shortcuts import redirect, render
+from django.contrib.contenttypes.models import ContentType
+from .forms import LoginForm
+from Home.models import ActivityLog
 
+def get_client_ip(request):
+    """Extract the client IP address from request."""
+    x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
+    if x_forwarded_for:
+        ip = x_forwarded_for.split(',')[0]
+    else:
+        ip = request.META.get('REMOTE_ADDR')
+    return ip
 
 def Login(request):
-    # 1. Logic: Redirect already logged-in users based on their role
+    # Already logged in? Redirect with role-based logic
     if request.user.is_authenticated:
         return redirect_user_by_role(request.user)
 
@@ -43,21 +57,51 @@ def Login(request):
         if form.is_valid():
             username_or_phone = form.cleaned_data.get('username')
             password = form.cleaned_data.get('password')
-
             user = authenticate(request, username=username_or_phone, password=password)
 
             if user is not None:
+                # --- SUCCESSFUL LOGIN ---
                 login(request, user)
                 messages.success(request, f"Welcome back, {user.first_name}!")
-                
-                # 2. Logic: Handle 'next' parameter safely
+
+                # Log the activity
+                ActivityLog.objects.create(
+                    user=user,
+                    action='LOGIN',
+                    description=f"Successful login from IP {get_client_ip(request)}",
+                    content_type=ContentType.objects.get_for_model(user),
+                    object_id=user.id
+                )
+
+                # Handle 'next' parameter
                 next_url = request.GET.get('next')
                 if next_url:
                     return redirect(next_url)
-                
-                # 3. Logic: Dynamic Dashboard Routing
+
+                # Redirect by role
                 return redirect_user_by_role(user)
+
             else:
+                # --- FAILED LOGIN ---
+                # Log failed attempt (user doesn't exist or password wrong)
+                # We'll try to get the user object if exists (to associate if possible)
+                user_obj = None
+                try:
+                    # Attempt to find a user with that username/phone (case-insensitive)
+                    user_obj = CustomUser.objects.get(username=username_or_phone)
+                except CustomUser.DoesNotExist:
+                    # Maybe it's a phone number? Adjust if your User model has a phone field.
+                    # For simplicity, we'll just set user_obj = None
+                    pass
+
+                ActivityLog.objects.create(
+                    user=user_obj,  # could be None
+                    action='LOGIN',
+                    description=f"Failed login attempt for username '{username_or_phone}' from IP {get_client_ip(request)}",
+                    content_type=ContentType.objects.get_for_model(CustomUser),
+                    object_id=user_obj.id if user_obj else 0
+                )
+
                 messages.error(request, "Invalid email/phone or password.")
     else:
         form = LoginForm()
